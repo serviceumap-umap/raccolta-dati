@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raccolta Dati Anomalie</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .header h1 { 
+            font-size: 28px; 
+            font-weight: bold; 
+        }
+        .prefix-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .prefix-label { font-size: 14px; font-weight: bold; color: #ecf0f1; }
+        .prefix-input {
+            width: 60px;
+            padding: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #34495e;
+            border-radius: 6px;
+            background: white;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .prefix-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+        }
+        .header-buttons { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+        }
+        .btn-manage, .btn-report {
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            min-height: 60px;
+            min-width: 150px;
+        }
+        .btn-manage { background: #f39c12; }
+        .btn-report { background: #e74c3c; }
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            height: calc(100vh - 140px);
+        }
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .search-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 70px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+        .results-list {
+            flex: 1;
+            overflow-y: auto;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .result-item:hover {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+        }
+        .result-item.selected {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        .telaio-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .telaio-prefix-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #3498db;
+            letter-spacing: 2px;
+        }
+        .telaio-input {
+            width: 100%;
+            padding: 25px;
+            font-size: 32px;
+            text-align: center;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            letter-spacing: 5px;
+            font-weight: bold;
+            min-height: 90px;
+        }
+        .telaio-input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.3);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-clear {
+            flex: 1;
+            padding: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-submit {
+            flex: 2;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .btn-submit:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+        .error {
+            background: #fdf2f2;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+        }
+        .close {
+            color: #aaa;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close:hover { color: #000; }
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .chart-label { flex: 1; font-size: 14px; padding-right: 15px; }
+        .chart-value {
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .chart-progress {
+            flex: 2;
+            height: 25px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        .chart-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+        }
+        .expand-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .expand-btn:hover { background: #138496; }
+        .detail-list {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #17a2b8;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .detail-telaio {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* MEDIA QUERIES PER MOBILE */
+        @media (max-width: 1300px) {
+            .main-content { 
+                grid-template-columns: 1fr; 
+                gap: 20px; 
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container { 
+                padding: 10px; 
+                height: auto;
+            }
+            .header { 
+                padding: 10px 15px; 
+            }
+            .header h1 { 
+                font-size: 18px; 
+            }
+            .header-left { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 10px; 
+                width: 100%;
+            }
+            .prefix-input { 
+                width: 50px; 
+                font-size: 18px; 
+                padding: 6px; 
+            }
+            .prefix-label { 
+                font-size: 12px; 
+            }
+            .header-buttons { 
+                width: 100%; 
+                justify-content: space-between;
+            }
+            .btn-manage, .btn-report {
+                flex: 1;
+                min-width: 110px;
+                padding: 12px 15px;
+                font-size: 13px;
+                min-height: 50px;
+            }
+            .main-content { 
+                gap: 15px; 
+                height: auto; 
+            }
+            .panel { 
+                padding: 20px; 
+            }
+            .section-title { 
+                font-size: 18px; 
+            }
+            .search-input { 
+                padding: 15px; 
+                font-size: 16px; 
+                min-height: 55px; 
+            }
+            .result-item { 
+                padding: 15px; 
+                font-size: 14px; 
+            }
+            .telaio-input {
+                font-size: 24px;
+                padding: 20px;
+                min-height: 70px;
+                letter-spacing: 3px;
+            }
+            .btn-clear, .btn-submit {
+                font-size: 14px;
+                padding: 12px;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 10% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>📊 RACCOLTA DATI ANOMALIE</h1>
+            </div>
+            <div class="header-buttons">
+                <button class="btn-manage" onclick="showManageAnomalies()">⚙️ GESTISCI DB</button>
+                <button class="btn-report" onclick="showReport()">📈 REPORT</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="panel">
+                <div class="section-title">🔍 CERCA ANOMALIA</div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Digita parola chiave..." onkeyup="searchAnomalies()" onfocus="triggerTouchKeyboard(this)" autocomplete="off" inputmode="text">
+                <div class="results-list" id="resultsList">
+                    <div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">
+                        Digita una parola chiave per cercare le anomalie
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="section-title">📋 INSERIMENTO DATI</div>
+                
+                <div style="margin-bottom: 30px;">
+                    <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 10px;">
+                        <span style="font-size: 24px; font-weight: bold; color: #7f8c8d;">Prefisso:</span>
+                        <input type="text" id="telaioPrefixInput" placeholder="??" maxlength="2" onkeyup="saveTelaioPrefixAndUpdate()" onchange="saveTelaioPrefixAndUpdate()" style="width: 60px; padding: 8px; font-size: 32px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 6px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 2px;">
+                        <span style="font-size: 32px; font-weight: bold; color: #2c3e50;">-</span>
+                        <span style="font-size: 24px; color: #7f8c8d;">(5 cifre)</span>
+                    </div>
+                    <input type="text" class="telaio-input" id="telaio" placeholder="00000" maxlength="5" inputmode="numeric" pattern="[0-9]*">
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-clear" onclick="clearTelaio()">🗑️ CANCELLA</button>
+                    <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled>✅ INVIA</button>
+                </div>
+                <div id="statusMessage"></div>
+                <div id="lastEntry" style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #17a2b8; display: none;">
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">📋 Ultimo inserimento:</h4>
+                    <div id="lastEntryContent" style="color: #495057; font-size: 16px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Report Anomalie (Pareto)</h2>
+                <span class="close" onclick="closeModal('reportModal')">&times;</span>
+            </div>
+            <div id="reportContent"></div>
+        </div>
+    </div>
+    
+    <div id="manageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Gestisci Database Anomalie</h2>
+                <span class="close" onclick="closeModal('manageModal')">&times;</span>
+            </div>
+            <div id="manageContent"></div>
+        </div>
+    </div>
+    
+    <div id="longPeriodModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 Report di Lungo Periodo</h2>
+                <span class="close" onclick="closeModal('longPeriodModal')">&times;</span>
+            </div>
+            <div id="longPeriodContent">
+                <div style="padding: 20px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px;">Seleziona il periodo da analizzare:</h3>
+                    <div style="display: flex; gap: 20px; margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Data Inizio:</label>
+                            <input type="date" id="dataInizio" style="padding: 10px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Data Fine:</label>
+                            <input type="date" id="dataFine" style="padding: 10px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                        </div>
+                        <button onclick="generateLongPeriodReport()" style="padding: 15px 30px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px;">
+                            📊 GENERA REPORT
+                        </button>
+                    </div>
+                    <div id="longPeriodReportContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== VARIABILI GLOBALI ==========
+        let anomalieDB = JSON.parse(localStorage.getItem('anomalieDB')) || [];
+        
+        // Migrazione automatica vecchia struttura a nuova
+        if (anomalieDB.length > 0 && typeof anomalieDB[0] === 'string') {
+            anomalieDB = anomalieDB.map(nome => ({
+                nome: nome,
+                ute: 'Non assegnata',
+                gravita: 2
+            }));
+            localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+        }
+        
+        let selectedAnomalia = null;
+        let lastTelaio = '';
+        let shouldClearOnNextInput = false;
+        let telaioPrefixStorage = localStorage.getItem('telaioPrefix') || '';
+        let currentGravitaFilter = 0;
+        let currentUteFilter = '';
+        
+        const now = new Date();
+        const today = now.getFullYear() + '-' + (now.getMonth()+1).toString().padStart(2,'0') + '-' + now.getDate().toString().padStart(2,'0');
+        const storageKey = 'anomalieData_' + today;
+        let dataStorage = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+        // ========== TRIGGER TASTIERA TOUCH ==========
+        function triggerTouchKeyboard(element) {
+            element.focus();
+            element.click();
+            
+            try {
+                if (typeof Windows !== 'undefined' && Windows.UI && Windows.UI.ViewManagement) {
+                    var inputPane = Windows.UI.ViewManagement.InputPane.getForCurrentView();
+                    inputPane.tryShow();
+                }
+            } catch (e) {
+                // Ignora errori se l'API non è disponibile
+            }
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        function getTurnoCorrente() {
+            const now = new Date();
+            const totalMinutes = now.getHours() * 60 + now.getMinutes();
+            if (totalMinutes >= 345 && totalMinutes < 840) return 'Primo Turno';
+            if (totalMinutes >= 840 && totalMinutes < 1335) return 'Secondo Turno';
+            return 'Terzo Turno';
+        }
+
+        function getCompleteTelaio() {
+            const numeroTelaio = document.getElementById('telaio').value;
+            return (telaioPrefixStorage && numeroTelaio.length === 5) ? telaioPrefixStorage + numeroTelaio : numeroTelaio;
+        }
+
+        function showMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = message;
+            statusDiv.className = 'status-message ' + type;
+            setTimeout(function() {
+                statusDiv.innerHTML = '';
+                statusDiv.className = '';
+            }, 3000);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // ========== AUTO-SALVATAGGIO E PULIZIA ==========
+        function cleanOldData() {
+            const threshold = new Date(Date.now() - (35 * 24 * 60 * 60 * 1000));
+            let deletedCount = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('anomalieData_')) {
+                    const dateStr = key.replace('anomalieData_', '');
+                    if (new Date(dateStr) < threshold) {
+                        localStorage.removeItem(key);
+                        deletedCount++;
+                        i--;
+                    }
+                }
+            }
+            
+            if (deletedCount > 0) {
+                console.log('Pulizia automatica: ' + deletedCount + ' sessioni eliminate');
+            }
+        }
+
+        setInterval(function() {
+            localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+            localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+            localStorage.setItem('telaioPrefix', telaioPrefixStorage);
+            cleanOldData();
+        }, 30000);
+
+        // ========== GESTIONE PREFISSO TELAIO ==========
+        function saveTelaioPrefixAndUpdate() {
+            telaioPrefixStorage = document.getElementById('telaioPrefixInput').value.toUpperCase();
+            localStorage.setItem('telaioPrefix', telaioPrefixStorage);
+        }
+
+        // ========== RICERCA ANOMALIE ==========
+        function searchAnomalies() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsList = document.getElementById('resultsList');
+            
+            if (query.length < 2) {
+                resultsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">Digita almeno 2 caratteri</div>';
+                return;
+            }
+
+            const filtered = anomalieDB.filter(function(a) {
+                return a.nome.toLowerCase().includes(query) || a.ute.toLowerCase().includes(query);
+            });
+
+            if (filtered.length === 0) {
+                resultsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;">Nessuna anomalia trovata</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(function(a) {
+                const stelle = '⭐'.repeat(a.gravita);
+                html += '<div class="result-item" onclick="selectAnomalia(\'' + a.nome.replace(/'/g, "\\'") + '\')">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                html += '<span>' + a.nome + '</span>';
+                html += '<div style="display: flex; gap: 10px; align-items: center;">';
+                html += '<span style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">' + a.ute + '</span>';
+                html += '<span style="font-size: 16px;">' + stelle + '</span>';
+                html += '</div></div></div>';
+            });
+            
+            resultsList.innerHTML = html;
+        }
+
+        function selectAnomalia(anomaliaNome) {
+            selectedAnomalia = anomalieDB.find(function(a) { return a.nome === anomaliaNome; });
+            
+            document.querySelectorAll('.result-item').forEach(function(item) {
+                item.classList.remove('selected');
+                if (item.textContent.includes(anomaliaNome)) item.classList.add('selected');
+            });
+
+            if (lastTelaio) document.getElementById('telaio').value = lastTelaio;
+            updateSubmitButton();
+            showMessage('✅ Anomalia selezionata: ' + anomaliaNome, 'success');
+        }
+
+        // ========== GESTIONE INPUT TELAIO ==========
+        function clearTelaio() {
+            document.getElementById('telaio').value = '';
+            shouldClearOnNextInput = false;
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            const isReady = selectedAnomalia && document.getElementById('telaio').value.length === 5;
+            
+            if (submitBtn) {
+                submitBtn.disabled = !isReady;
+                submitBtn.style.background = isReady ? '#27ae60' : '#95a5a6';
+                submitBtn.style.cursor = isReady ? 'pointer' : 'not-allowed';
+            }
+        }
+
+        // ========== SUBMIT DATI ==========
+        function submitData() {
+            if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
+                showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
+                return;
+            }
+
+            if (!telaioPrefixStorage) {
+                showMessage('❌ Inserisci il prefisso del telaio nel campo in alto', 'error');
+                return;
+            }
+
+            const numeroTelaio = document.getElementById('telaio').value;
+            const data = {
+                anomalia: selectedAnomalia.nome,
+                ute: selectedAnomalia.ute,
+                gravita: selectedAnomalia.gravita,
+                telaio: getCompleteTelaio(),
+                telaiioNumerico: numeroTelaio,
+                turno: getTurnoCorrente(),
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('it-IT'),
+                time: new Date().toLocaleTimeString('it-IT')
+            };
+
+            lastTelaio = numeroTelaio;
+            shouldClearOnNextInput = false;
+            dataStorage.push(data);
+            localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+            
+            updateLastEntry(data);
+            showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
+            
+            setTimeout(function() { resetForm(); }, 2000);
+        }
+
+        function updateLastEntry(data) {
+            const lastEntryDiv = document.getElementById('lastEntry');
+            let html = '<div style="display: flex; justify-content: space-between; align-items: center;">';
+            html += '<div>';
+            html += '<strong>🔧 Anomalia:</strong> ' + data.anomalia + '<br>';
+            html += '<strong>🏷️ Telaio:</strong> <span style="font-family: \'Courier New\', monospace; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">' + data.telaio + '</span><br>';
+            html += '<strong>🕐 Orario:</strong> ' + data.time;
+            html += '</div>';
+            html += '<button onclick="removeLastEntry()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; min-height: 50px;">';
+            html += '🗑️ RIMUOVI<br>ULTIMO';
+            html += '</button>';
+            html += '</div>';
+            
+            document.getElementById('lastEntryContent').innerHTML = html;
+            lastEntryDiv.style.display = 'block';
+        }
+
+        function removeLastEntry() {
+            if (dataStorage.length === 0) {
+                showMessage('❌ Nessun dato da rimuovere', 'error');
+                return;
+            }
+
+            const lastEntry = dataStorage[dataStorage.length - 1];
+            const confirmMessage = '❓ RIMUOVERE L\'ULTIMO INSERIMENTO?\n\n🔧 ' + lastEntry.anomalia + '\n🏷️ ' + lastEntry.telaio + '\n🕐 ' + lastEntry.time + '\n\n⚠️ Operazione NON reversibile!';
+            
+            if (confirm(confirmMessage)) {
+                dataStorage.pop();
+                localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+                
+                if (dataStorage.length > 0) {
+                    const newLastEntry = dataStorage[dataStorage.length - 1];
+                    updateLastEntry(newLastEntry);
+                    lastTelaio = newLastEntry.telaiioNumerico || newLastEntry.telaio.slice(-5);
+                } else {
+                    document.getElementById('lastEntry').style.display = 'none';
+                    lastTelaio = '';
+                }
+                
+                showMessage('✅ Ultimo inserimento rimosso! Totale: ' + dataStorage.length, 'success');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">Digita una parola chiave per cercare le anomalie</div>';
+            document.getElementById('statusMessage').innerHTML = '';
+            selectedAnomalia = null;
+            updateSubmitButton();
+        }
+
+        // ========== REPORT FUNCTIONS ==========
+        function showReport() {
+            currentGravitaFilter = 0;
+            currentUteFilter = '';
+            
+            if (dataStorage.length === 0) {
+                let html = '<div style="padding: 20px; background: #fff3cd; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">';
+                html += '<strong>⚠️ Nessun dato nella sessione corrente</strong><br>';
+                html += '<span style="color: #856404;">Non ci sono anomalie registrate oggi. Puoi comunque accedere al Report di Lungo Periodo.</span>';
+                html += '</div>';
+                html += '<div style="text-align: center; margin-top: 30px;">';
+                html += '<button onclick="showLongPeriodReport()" style="padding: 15px 30px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">';
+                html += '📅 REPORT DI LUNGO PERIODO';
+                html += '</button>';
+                html += '</div>';
+                
+                document.getElementById('reportContent').innerHTML = html;
+                document.getElementById('reportModal').style.display = 'block';
+                return;
+            }
+            renderReport();
+            document.getElementById('reportModal').style.display = 'block';
+        }
+
+        function filterByGravita(gravita) {
+            currentGravitaFilter = gravita;
+            renderReport();
+        }
+        
+        function filterByUte(ute) {
+            currentUteFilter = ute || '';
+            renderReport();
+        }
+
+        function renderReport() {
+            let filteredData = dataStorage;
+            
+            if (currentGravitaFilter > 0) {
+                filteredData = filteredData.filter(function(item) {
+                    return item.gravita === currentGravitaFilter;
+                });
+            }
+            
+            if (currentUteFilter && currentUteFilter !== '') {
+                filteredData = filteredData.filter(function(item) {
+                    return item.ute === currentUteFilter;
+                });
+            }
+
+            const uteSet = new Set();
+            dataStorage.forEach(function(item) {
+                uteSet.add(item.ute);
+            });
+            const uteList = Array.from(uteSet).sort();
+
+            let html = '<div style="display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">';
+            html += '<span style="font-weight: bold; margin-right: 10px;">FILTRI:</span>';
+            html += '<button onclick="filterByGravita(0)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 0 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 0 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">📊 TUTTE</button>';
+            html += '<button onclick="filterByGravita(1)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 1 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 1 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐</button>';
+            html += '<button onclick="filterByGravita(2)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 2 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 2 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐⭐</button>';
+            html += '<button onclick="filterByGravita(3)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 3 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 3 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐⭐⭐</button>';
+            html += '<select id="uteFilter" onchange="filterByUte(this.value)" style="padding: 8px 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 14px; font-weight: bold;">';
+            html += '<option value="">🏭 TUTTE LE UTE</option>';
+            
+            uteList.forEach(function(ute) {
+                const selected = currentUteFilter === ute ? 'selected' : '';
+                html += '<option value="' + ute + '" ' + selected + '>' + ute + '</option>';
+            });
+            
+            html += '</select>';
+            html += '</div>';
+            
+            html += '<div style="margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">';
+            html += '<div>';
+            html += '<strong>📈 Registrazioni: ' + filteredData.length + '</strong> ' + ((currentGravitaFilter > 0 || currentUteFilter) ? '(filtrate)' : '') + '<br>';
+            html += '<strong>📅 Sessione: ' + today + '</strong>';
+            html += '</div>';
+            html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            html += '<button onclick="downloadCompleteReport()" style="padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">📊 SCARICA REPORT</button>';
+            html += '<button onclick="showLongPeriodReport()" style="padding: 12px 20px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">📅 REPORT LUNGO PERIODO</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            if (filteredData.length === 0) {
+                html += '<div style="padding: 40px; text-align: center; background: #fff3cd; border-radius: 8px; border-left: 4px solid #f39c12;">';
+                html += '<strong>⚠️ Nessun dato disponibile con i filtri selezionati</strong><br>';
+                html += '<span style="color: #856404;">Modifica i filtri sopra per visualizzare altri dati.</span>';
+                html += '</div>';
+                document.getElementById('reportContent').innerHTML = html;
+                return;
+            }
+
+            const frequencies = {};
+            filteredData.forEach(function(item) {
+                frequencies[item.anomalia] = (frequencies[item.anomalia] || 0) + 1;
+            });
+
+            const sorted = Object.entries(frequencies).sort(function(a, b) { return b[1] - a[1]; });
+            const maxCount = sorted[0] ? sorted[0][1] : 1;
+            const total = filteredData.length;
+
+            html = html.replace('<strong>📅 Sessione: ' + today + '</strong>', '<strong>📊 Anomalie uniche: ' + Object.keys(frequencies).length + '</strong><br><strong>📅 Sessione: ' + today + '</strong>');
+            
+            html += '<div class="chart-container">';
+
+            sorted.forEach(function(entry, index) {
+                const anomalia = entry[0];
+                const count = entry[1];
+                const percent = ((count / total) * 100).toFixed(1);
+                const width = (count / maxCount) * 100;
+                const sampleRecord = filteredData.find(function(item) { return item.anomalia === anomalia; });
+                const ute = sampleRecord ? sampleRecord.ute : 'Non assegnata';
+                const gravita = sampleRecord ? sampleRecord.gravita : 2;
+                const stelle = '⭐'.repeat(gravita);
+                
+                html += '<div class="chart-bar" id="bar-' + index + '">';
+                html += '<div class="chart-label">';
+                html += (index + 1) + '. ' + anomalia;
+                html += '<div style="display: inline-flex; gap: 8px; margin-left: 10px;">';
+                html += '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">' + ute + '</span>';
+                html += '<span style="font-size: 14px;">' + stelle + '</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="chart-progress">';
+                html += '<div class="chart-fill" style="width: ' + width + '%"></div>';
+                html += '</div>';
+                html += '<div class="chart-value">' + count + '</div>';
+                html += '<div style="width: 60px; text-align: center; font-size: 12px; color: #666;">' + percent + '%</div>';
+                html += '<button class="expand-btn" onclick="toggleDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')">👁️ Dettagli</button>';
+                html += '<button onclick="exportAnomaliaDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')" style="background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-left: 5px;">📤 ESPORTA</button>';
+                html += '</div>';
+                html += '<div id="details-' + index + '" style="display: none;"></div>';
+            });
+
+            html += '</div>';
+            document.getElementById('reportContent').innerHTML = html;
+        }
+
+        function toggleDetails(anomalia, index) {
+            const detailsDiv = document.getElementById('details-' + index);
+            const btn = document.querySelector('#bar-' + index + ' .expand-btn');
+            
+            if (detailsDiv.style.display === 'none') {
+                const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomalia; });
+                
+                let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: "' + anomalia + '" (' + telaiRelated.length + ')</h4>';
+                
+                telaiRelated.forEach(function(item, idx) {
+                    detailHtml += '<div class="detail-telaio"><span>' + (idx + 1) + '. <strong>' + item.telaio + '</strong></span><span style="color: #6c757d; font-size: 12px;">' + item.date + ' - ' + item.time + '</span></div>';
+                });
+                
+                detailHtml += '</div>';
+                detailsDiv.innerHTML = detailHtml;
+                detailsDiv.style.display = 'block';
+                btn.textContent = '🔼 Nascondi';
+            } else {
+                detailsDiv.style.display = 'none';
+                btn.textContent = '👁️ Dettagli';
+            }
+        }
+
+        function exportAnomaliaDetails(anomaliaName, index) {
+            const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomaliaName; });
+            if (telaiRelated.length === 0) return;
+
+            const currentDate = new Date();
+            let htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>';
+            htmlContent += 'body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }';
+            htmlContent += 'h1 { color: #2c3e50; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; }';
+            htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 20px 0; }';
+            htmlContent += 'th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }';
+            htmlContent += 'th { background-color: #e74c3c; color: white; font-weight: bold; }';
+            htmlContent += 'tr:nth-child(even) { background-color: #f9f9f9; }';
+            htmlContent += '.summary { background-color: #fdf2f2; padding: 15px; border-radius: 8px; margin: 20px 0; }';
+            htmlContent += '.telaio-code { font-family: "Courier New", monospace; font-weight: bold; }';
+            htmlContent += '.footer { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; font-size: 14px; color: #666; }';
+            htmlContent += '</style></head><body>';
+            htmlContent += '<h1>🔧 DETTAGLIO ANOMALIA</h1>';
+            htmlContent += '<div style="background-color: #e74c3c; color: white; padding: 10px; border-radius: 6px; margin: 15px 0;">';
+            htmlContent += '<h2 style="margin: 0;">📋 ' + anomaliaName + '</h2>';
+            htmlContent += '</div>';
+            htmlContent += '<div class="summary">';
+            htmlContent += '<strong>📅 Data:</strong> ' + currentDate.toLocaleDateString('it-IT') + ' - ' + currentDate.toLocaleTimeString('it-IT') + '<br>';
+            htmlContent += '<strong>📊 Telai con questa Anomalia:</strong> ' + telaiRelated.length;
+            htmlContent += '</div>';
+            htmlContent += '<table>';
+            htmlContent += '<thead><tr><th>#</th><th>Telaio</th><th>Data</th><th>Ora</th></tr></thead>';
+            htmlContent += '<tbody>';
+
+            telaiRelated.forEach(function(item, idx) {
+                htmlContent += '<tr><td><strong>' + (idx + 1) + '</strong></td><td class="telaio-code">' + item.telaio + '</td><td>' + item.date + '</td><td>' + item.time + '</td></tr>';
+            });
+
+            htmlContent += '</tbody></table><div class="footer"><strong>📋 Report generato automaticamente</strong><br>Per utilizzarlo: seleziona tutto (Ctrl+A), copia (Ctrl+C) e incolla nella tua email.</div></body></html>';
+
+            const newWindow = window.open('', '_blank', 'width=700,height=600,scrollbars=yes');
+            newWindow.document.write(htmlContent);
+            newWindow.document.close();
+            newWindow.document.title = 'Dettaglio_' + anomaliaName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today;
+        }
+
+        function downloadCompleteReport() {
+            if (dataStorage.length === 0) {
+                alert('❌ Nessun dato disponibile per il download');
+                return;
+            }
+
+            const frequencies = {};
+            const anomaliaDetails = {};
+            
+            dataStorage.forEach(function(item) {
+                if (!frequencies[item.anomalia]) {
+                    frequencies[item.anomalia] = 0;
+                    anomaliaDetails[item.anomalia] = {
+                        ute: item.ute || 'Non assegnata',
+                        gravita: item.gravita || 2
+                    };
+                }
+                frequencies[item.anomalia]++;
+            });
+            
+            const sorted = Object.entries(frequencies).sort(function(a, b) { return b[1] - a[1]; });
+            const top5 = sorted.slice(0, 5);
+            const total = dataStorage.length;
+            const now = new Date();
+            const day = now.getDate().toString().padStart(2, '0');
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            
+            const sortedData = dataStorage.slice().sort(function(a, b) {
+                const freqDiff = frequencies[b.anomalia] - frequencies[a.anomalia];
+                return freqDiff !== 0 ? freqDiff : a.anomalia.localeCompare(b.anomalia);
+            });
+
+            const uteStats = {};
+            dataStorage.forEach(function(item) {
+                const ute = item.ute || 'Non assegnata';
+                uteStats[ute] = (uteStats[ute] || 0) + 1;
+            });
+            
+            const sortedUteStats = Object.entries(uteStats).sort(function(a, b) { return b[1] - a[1]; });
+            const maxUteCount = sortedUteStats[0] ? sortedUteStats[0][1] : 1;
+            const maxTop5Count = top5[0] ? top5[0][1] : 1;
+
+            function createTextBar(value, maxValue, maxBars, color) {
+                const barCount = Math.round((value / maxValue) * maxBars);
+                const emptyCount = maxBars - barCount;
+                const filledBar = '█';
+                const emptyBar = '░';
+                return '<span style="color: ' + color + '; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
+                       filledBar.repeat(barCount) + 
+                       '</span><span style="color: #ddd; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
+                       emptyBar.repeat(emptyCount) + '</span>';
+            }
+
+            let emailHTML = '<!-- INIZIO REPORT - COPIA DA QUI -->\n';
+            emailHTML += '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #ffffff;">\n\n';
+            
+            emailHTML += '  <!-- HEADER -->\n';
+            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #2c3e50; border-radius: 10px 10px 0 0;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td style="padding: 30px; text-align: center;">\n';
+            emailHTML += '        <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px 0; font-weight: bold;">📊 REPORT ANOMALIE</h1>\n';
+            emailHTML += '        <p style="color: #ecf0f1; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <!-- INFORMAZIONI SESSIONE -->\n';
+            emailHTML += '  <table width="100%" cellpadding="15" cellspacing="0" border="0" style="background-color: #ecf0f1;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
+            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📅 DATA REPORT</p>\n';
+            emailHTML += '          <p style="color: #2c3e50; font-size: 18px; margin: 0; font-weight: bold;">' + day + '/' + month + '/' + year + '</p>\n';
+            emailHTML += '        </div>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
+            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📊 TOTALE KO</p>\n';
+            emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + total + '</p>\n';
+            emailHTML += '        </div>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
+            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">🔧 ANOMALIE UNICHE</p>\n';
+            emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + Object.keys(frequencies).length + '</p>\n';
+            emailHTML += '        </div>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <!-- TOP 5 ANOMALIE -->\n';
+            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td>\n';
+            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">🏆 TOP 5 ANOMALIE RIPETITIVE</h2>\n';
+            
+            top5.forEach(function(entry, index) {
+                const anomalia = entry[0];
+                const count = entry[1];
+                const percent = ((count / total) * 100).toFixed(1);
+                const details = anomaliaDetails[anomalia];
+                const stelle = '⭐'.repeat(details.gravita);
+                const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
+                
+                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
+                emailHTML += '          <tr>\n';
+                emailHTML += '            <td width="50" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
+                emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #e74c3c;">' + (index + 1) + '</span>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td width="200" style="padding: 12px; vertical-align: middle;">\n';
+                emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #2c3e50; font-size: 14px;">' + anomalia + '</p>\n';
+                emailHTML += '              <p style="margin: 0; font-size: 12px;">\n';
+                emailHTML += '                <span style="background-color: #3498db; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
+                emailHTML += '                <span style="margin-left: 6px; font-size: 12px;">' + stelle + '</span>\n';
+                emailHTML += '              </p>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td style="padding: 12px; vertical-align: middle; font-size: 16px;">\n';
+                emailHTML += '              ' + textBar + '\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
+                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
+                emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">CASI</p>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
+                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</p>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '          </tr>\n';
+                emailHTML += '        </table>\n';
+            });
+            
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+            emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <!-- STATISTICHE PER UTE -->\n';
+            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td>\n';
+            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #3498db; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
+            
+            sortedUteStats.forEach(function(entry) {
+                const ute = entry[0];
+                const count = entry[1];
+                const percent = ((count / total) * 100).toFixed(1);
+                const textBar = createTextBar(count, maxUteCount, 25, '#3498db');
+                
+                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">\n';
+                emailHTML += '          <tr>\n';
+                emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;">\n';
+                emailHTML += '              <span style="background-color: #3498db; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;">\n';
+                emailHTML += '              ' + textBar + '\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;">\n';
+                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
+                emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">KO</p>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;">\n';
+                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</p>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '          </tr>\n';
+                emailHTML += '        </table>\n';
+            });
+            
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+            emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <!-- ELENCO COMPLETO TELAI -->\n';
+            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td>\n';
+            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
+            emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse;">\n';
+            emailHTML += '          <thead>\n';
+            emailHTML += '            <tr style="background-color: #34495e;">\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 50px;">#</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">GRAVITÀ</th>\n';
+            emailHTML += '            </tr>\n';
+            emailHTML += '          </thead>\n';
+            emailHTML += '          <tbody>\n';
+            
+            sortedData.forEach(function(item, index) {
+                const stelle = '⭐'.repeat(item.gravita || 2);
+                const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
+                emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + item.anomalia + '</td>\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + stelle + '</td>\n';
+                emailHTML += '            </tr>\n';
+            });
+            
+            emailHTML += '          </tbody>\n';
+            emailHTML += '        </table>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '  <!-- FOOTER -->\n';
+            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #34495e; border-radius: 0 0 10px 10px; margin-top: 20px;">\n';
+            emailHTML += '    <tr>\n';
+            emailHTML += '      <td style="padding: 20px; text-align: center;">\n';
+            emailHTML += '        <p style="color: #ecf0f1; font-size: 13px; margin: 0;">🔧 Report generato automaticamente dal Sistema di Raccolta Dati Anomalie</p>\n';
+            emailHTML += '        <p style="color: #95a5a6; font-size: 11px; margin: 10px 0 0 0;">Documento generato il ' + day + '/' + month + '/' + year + ' alle ore ' + hours + ':' + minutes + '</p>\n';
+            emailHTML += '      </td>\n';
+            emailHTML += '    </tr>\n';
+            emailHTML += '  </table>\n\n';
+            
+            emailHTML += '</div>\n';
+            emailHTML += '<!-- FINE REPORT - COPIA FINO A QUI -->\n\n';
+            
+            emailHTML += '\n\n\n';
+            emailHTML += '<!--\n';
+            emailHTML += '╔═══════════════════════════════════════════════════════════════════════════╗\n';
+            emailHTML += '  🔧 COME INSERIRE QUESTO REPORT IN OUTLOOK WEB - GUIDA PASSO-PASSO\n';
+            emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n\n';
+            emailHTML += '✅ METODO 1 - MODALITÀ HTML (CONSIGLIATO)\n';
+            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            emailHTML += '1. Apri questo file con NOTEPAD (Blocco Note) o qualsiasi editor di testo\n';
+            emailHTML += '2. Seleziona TUTTO il testo da "<!-- INIZIO REPORT" a "<!-- FINE REPORT"\n';
+            emailHTML += '3. Copia (Ctrl+C)\n';
+            emailHTML += '4. Vai su Outlook Web (https://outlook.office.com)\n';
+            emailHTML += '5. Clicca su "Nuova email"\n';
+            emailHTML += '6. Clicca sui 3 puntini (...) in basso nella finestra di composizione\n';
+            emailHTML += '7. Seleziona "Cambia visualizzazione" → "Visualizza HTML"\n';
+            emailHTML += '8. INCOLLA il codice copiato (Ctrl+V)\n';
+            emailHTML += '9. Clicca di nuovo sui 3 puntini (...)\n';
+            emailHTML += '10. Seleziona "Cambi visualizzazione" → "Predefinito"\n';
+            emailHTML += '11. ✨ Il report apparirà formattato perfettamente!\n\n';
+            emailHTML += '⚠️ NOTA: Se non vedi "Visualizza HTML", clicca su "Mostra da" per espandere.\n\n\n';
+            emailHTML += '✅ METODO 2 - COPIA E INCOLLA DIRETTO (PIÙ VELOCE MA MENO PRECISO)\n';
+            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            emailHTML += '1. Apri il file "Report_Email_[data].html" nel BROWSER (Chrome/Edge)\n';
+            emailHTML += '2. Seleziona tutto il contenuto visibile (Ctrl+A)\n';
+            emailHTML += '3. Copia (Ctrl+C)\n';
+            emailHTML += '4. Vai su Outlook Web\n';
+            emailHTML += '5. Clicca "Nuova email"\n';
+            emailHTML += '6. Incolla direttamente nel corpo email (Ctrl+V)\n';
+            emailHTML += '7. ⚠️ Alcuni stili potrebbero non essere perfetti\n\n\n';
+            emailHTML += '✅ METODO 3 - ALLEGARE IL FILE (PIÙ SICURO)\n';
+            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            emailHTML += '1. In Outlook Web, clicca "Nuova email"\n';
+            emailHTML += '2. Scrivi il testo della email\n';
+            emailHTML += '3. Clicca l\'icona della graffetta 📎\n';
+            emailHTML += '4. Seleziona il file "Report_Email_[data].html"\n';
+            emailHTML += '5. Il destinatario può aprirlo con un doppio clic\n\n\n';
+            emailHTML += '💡 SUGGERIMENTI:\n';
+            emailHTML += '• Il METODO 1 garantisce la migliore compatibilità con Outlook\n';
+            emailHTML += '• Se hai problemi, usa il METODO 3 (allegato)\n';
+            emailHTML += '• Puoi testare inviando una email a te stesso prima!\n\n';
+            emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n';
+            emailHTML += '-->\n';
+            
+            const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('✅ REPORT EMAIL SCARICATO!\n\n🔧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Apri il file con Notepad e segui le istruzioni in fondo per inserirlo in Outlook Web!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+        }
+
+        // ========== GESTIONE DATABASE ANOMALIE ==========
+        function showManageAnomalies() {
+            document.getElementById('manageModal').style.display = 'block';
+            updateManageContent();
+            populateAnomalieList();
+        }
+
+        function updateManageContent() {
+            let html = '<div style="margin-bottom: 25px;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">ℹ️ Informazioni Sessione</h3>';
+            html += '<div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">';
+            html += '<button onclick="showDataInfo()" style="padding: 15px 25px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📊 INFO SESSIONE</button>';
+            html += '</div>';
+            html += '<div style="font-size: 14px; color: #7f8c8d;">';
+            html += '📅 Sessione: <strong>' + today + '</strong> | 📊 Record oggi: <strong>' + dataStorage.length + '</strong>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div style="margin-bottom: 25px;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">➕ Aggiungi/Modifica Anomalia</h3>';
+            html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px solid #ecf0f1;">';
+            html += '<input type="hidden" id="editingIndex" value="-1">';
+            html += '<div style="margin-bottom: 15px;">';
+            html += '<label style="display: block; font-weight: bold; margin-bottom: 5px;">Descrizione Anomalia:</label>';
+            html += '<input type="text" id="newAnomaliaInput" placeholder="Descrizione anomalia..." onfocus="triggerTouchKeyboard(this)" inputmode="text" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">';
+            html += '</div>';
+
+            html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">';
+            html += '<div>';
+            html += '<label style="display: block; font-weight: bold; margin-bottom: 5px;">UTE Responsabile:</label>';
+            html += '<select id="uteSelect" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">';
+            html += '<option value="Non assegnata">Non assegnata</option>';
+            html += '<option value="UTE 1">UTE 1</option>';
+            html += '<option value="UTE 3">UTE 3</option>';
+            html += '<option value="UTE 4">UTE 4</option>';
+            html += '<option value="UTE 5">UTE 5</option>';
+            html += '<option value="UTE 6">UTE 6</option>';
+            html += '<option value="UTE 7">UTE 7</option>';
+            html += '<option value="UTE 8">UTE 8</option>';
+            html += '<option value="UTE 9">UTE 9</option>';
+            html += '<option value="UTE 11">UTE 11</option>';
+            html += '<option value="UTE 71">UTE 71</option>';
+            html += '<option value="LOG">LOG</option>';
+            html += '</select>';
+            html += '</div>';
+
+            html += '<div>';
+            html += '<label style="display: block; font-weight: bold; margin-bottom: 5px;">Gravità:</label>';
+            html += '<div style="display: flex; gap: 10px; padding: 8px 0;">';
+            html += '<button type="button" onclick="setGravita(1)" id="grav1" style="padding: 10px 20px; background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐</button>';
+            html += '<button type="button" onclick="setGravita(2)" id="grav2" style="padding: 10px 20px; background: #fff3cd; border: 2px solid #f39c12; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐⭐</button>';
+            html += '<button type="button" onclick="setGravita(3)" id="grav3" style="padding: 10px 20px; background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐⭐⭐</button>';
+            html += '</div>';
+            html += '<input type="hidden" id="gravitaValue" value="2">';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div style="display: flex; gap: 10px;">';
+            html += '<button onclick="saveAnomalia()" style="flex: 1; padding: 15px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">';
+            html += '<span id="saveButtonText">AGGIUNGI</span>';
+            html += '</button>';
+            html += '<button onclick="cancelEdit()" id="cancelButton" style="display: none; padding: 15px 25px; background: #95a5a6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">ANNULLA</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div style="margin-bottom: 25px;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">📝 Anomalie Esistenti (' + anomalieDB.length + ')</h3>';
+            html += '<div style="margin-bottom: 15px;">';
+            html += '<input type="text" id="searchAnomalieDB" placeholder="🔍 Cerca anomalia nel database..." onfocus="triggerTouchKeyboard(this)" inputmode="text" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;" onkeyup="filterAnomalieList()">';
+            html += '</div>';
+            html += '<div style="background: #f8f9fa; border: 2px solid #ecf0f1; border-radius: 10px; max-height: 300px; overflow-y: auto;" id="anomalieList"></div>';
+            html += '</div>';
+
+            html += '<div style="margin-bottom: 25px;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">💾 Backup e Ripristino</h3>';
+            html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
+            html += '<button onclick="exportDatabase()" style="padding: 15px 25px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📤 ESPORTA</button>';
+            html += '<input type="file" id="importFile" accept=".json" style="display: none;" onchange="importDatabase(event)">';
+            html += '<button onclick="document.getElementById(\'importFile\').click()" style="padding: 15px 25px; background: #9b59b6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📥 IMPORTA</button>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div style="margin-bottom: 25px; border: 1px solid #bdc3c7; border-radius: 8px; background: #f8f9fa;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px; padding: 15px 15px 0 15px;">⚙️ Funzioni Avanzate</h3>';
+            html += '<div style="padding: 0 15px 15px 15px;">';
+            html += '<div style="background: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #dee2e6; font-size: 13px; color: #6c757d;">';
+            html += 'Queste funzioni richiedono un codice di sicurezza. Codice: <span style="font-family: monospace; background: #e9ecef; padding: 2px 4px;">0000</span>';
+            html += '</div>';
+            html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
+            html += '<button onclick="clearTodayData()" style="padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Azzera Sessione</button>';
+            html += '<button onclick="clearDatabase()" style="padding: 12px 20px; background: #495057; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Azzera Database</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            document.getElementById('manageContent').innerHTML = html;
+        }
+
+        function populateAnomalieList() {
+            const listContainer = document.getElementById('anomalieList');
+            
+            if (anomalieDB.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #7f8c8d;">Nessuna anomalia presente</div>';
+                return;
+            }
+
+            displayAnomalieList(anomalieDB);
+        }
+
+        function filterAnomalieList() {
+            const searchTerm = document.getElementById('searchAnomalieDB').value.toLowerCase();
+            
+            if (searchTerm.length === 0) {
+                displayAnomalieList(anomalieDB);
+                return;
+            }
+
+            const filtered = anomalieDB.filter(function(anomalia) {
+                return anomalia.nome.toLowerCase().includes(searchTerm) || 
+                       anomalia.ute.toLowerCase().includes(searchTerm);
+            });
+
+            displayAnomalieList(filtered);
+        }
+
+        function displayAnomalieList(lista) {
+            const listContainer = document.getElementById('anomalieList');
+
+            if (lista.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">Nessuna anomalia trovata con la ricerca corrente</div>';
+                return;
+            }
+
+            let html = '';
+            lista.sort(function(a, b) { return a.nome.localeCompare(b.nome); }).forEach(function(anomalia) {
+                const originalIndex = anomalieDB.findIndex(function(item) { 
+                    return item.nome === anomalia.nome && item.ute === anomalia.ute && item.gravita === anomalia.gravita; 
+                });
+                
+                const stelle = '⭐'.repeat(anomalia.gravita);
+                html += '<div style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #ecf0f1;">';
+                html += '<div style="flex: 1; font-size: 14px; color: #2c3e50;">';
+                html += '<strong>' + anomalia.nome + '</strong><br>';
+                html += '<div style="display: flex; gap: 10px; margin-top: 5px;">';
+                html += '<span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">' + anomalia.ute + '</span>';
+                html += '<span style="font-size: 14px;">' + stelle + '</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div style="display: flex; gap: 5px;">';
+                html += '<button onclick="editAnomalia(' + originalIndex + ')" style="background: #f39c12; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;">✏️</button>';
+                html += '<button onclick="removeAnomalia(' + originalIndex + ')" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;">❌</button>';
+                html += '</div>';
+                html += '</div>';
+            });
+
+            listContainer.innerHTML = html;
+        }
+
+        function setGravita(value) {
+            document.getElementById('gravitaValue').value = value;
+            
+            for (let i = 1; i <= 3; i++) {
+                const btn = document.getElementById('grav' + i);
+                btn.style.background = '#ecf0f1';
+                btn.style.borderColor = '#bdc3c7';
+            }
+            
+            const selectedBtn = document.getElementById('grav' + value);
+            if (value === 1) {
+                selectedBtn.style.background = '#d5f4e6';
+                selectedBtn.style.borderColor = '#27ae60';
+            } else if (value === 2) {
+                selectedBtn.style.background = '#fff3cd';
+                selectedBtn.style.borderColor = '#f39c12';
+            } else {
+                selectedBtn.style.background = '#fdf2f2';
+                selectedBtn.style.borderColor = '#e74c3c';
+            }
+        }
+
+        function editAnomalia(index) {
+            const anomalia = anomalieDB[index];
+            
+            document.getElementById('newAnomaliaInput').value = anomalia.nome;
+            document.getElementById('uteSelect').value = anomalia.ute;
+            document.getElementById('editingIndex').value = index;
+            setGravita(anomalia.gravita);
+            
+            document.getElementById('saveButtonText').textContent = 'SALVA MODIFICHE';
+            document.getElementById('cancelButton').style.display = 'block';
+            
+            document.getElementById('newAnomaliaInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelEdit() {
+            document.getElementById('newAnomaliaInput').value = '';
+            document.getElementById('uteSelect').value = 'Non assegnata';
+            document.getElementById('editingIndex').value = '-1';
+            setGravita(2);
+            
+            document.getElementById('saveButtonText').textContent = 'AGGIUNGI';
+            document.getElementById('cancelButton').style.display = 'none';
+        }
+
+        function saveAnomalia() {
+            const nome = document.getElementById('newAnomaliaInput').value.trim();
+            const ute = document.getElementById('uteSelect').value;
+            const gravita = parseInt(document.getElementById('gravitaValue').value);
+            const editingIndex = parseInt(document.getElementById('editingIndex').value);
+
+            if (!nome) {
+                alert('⚠️ Inserisci una descrizione per l\'anomalia');
+                return;
+            }
+
+            const isDuplicate = anomalieDB.some(function(a, idx) {
+                return a.nome === nome && idx !== editingIndex;
+            });
+
+            if (isDuplicate) {
+                alert('⚠️ Questa anomalia esiste già nel database');
+                return;
+            }
+
+            const anomaliaObj = { nome: nome, ute: ute, gravita: gravita };
+
+            if (editingIndex >= 0) {
+                anomalieDB[editingIndex] = anomaliaObj;
+                alert('✅ Anomalia modificata con successo!');
+            } else {
+                anomalieDB.push(anomaliaObj);
+            }
+
+            localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+            populateAnomalieList();
+            updateManageContent();
+            cancelEdit();
+        }
+
+        function removeAnomalia(index) {
+            const anomalia = anomalieDB[index];
+            if (confirm('❓ Rimuovere "' + anomalia.nome + '" dal database?')) {
+                anomalieDB.splice(index, 1);
+                localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+                populateAnomalieList();
+                updateManageContent();
+            }
+        }
+
+        function exportDatabase() {
+            const dbData = {
+                anomalieDB: anomalieDB,
+                exportDate: new Date().toISOString(),
+                version: "2.0",
+                totalAnomalies: anomalieDB.length
+            };
+
+            const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'database_anomalie_backup_' + today + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert('✅ DATABASE ESPORTATO!\n\n📄 ' + anomalieDB.length + ' anomalie salvate');
+        }
+
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.anomalieDB || !Array.isArray(importedData.anomalieDB)) {
+                        throw new Error('Formato file non valido');
+                    }
+
+                    if (confirm('❓ CONFERMI L\'IMPORTAZIONE?\n\n📊 Anomalie attuali: ' + anomalieDB.length + '\n📥 Da importare: ' + importedData.anomalieDB.length + '\n\n⚠️ Sostituirà il database attuale!')) {
+                        anomalieDB = importedData.anomalieDB;
+                        localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+                        populateAnomalieList();
+                        updateManageContent();
+                        alert('✅ DATABASE IMPORTATO!\n📊 ' + anomalieDB.length + ' anomalie');
+                    }
+                } catch (error) {
+                    alert('❌ ERRORE IMPORTAZIONE:\n' + error.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        window.clearDatabase = function() {
+            const code = prompt('Inserisci il codice di sicurezza per azzerare il database:');
+            
+            if (code !== '0000') {
+                if (code !== null) alert('Codice errato.');
+                return;
+            }
+            
+            if (confirm('CONFERMI L\'AZZERAMENTO COMPLETO DEL DATABASE?\n\n' + anomalieDB.length + ' anomalie verranno cancellate definitivamente.\n\nOperazione NON reversibile!')) {
+                anomalieDB = [];
+                localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+                populateAnomalieList();
+                updateManageContent();
+                document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;">Database vuoto - Aggiungi anomalie</div>';
+                alert('Database azzerato completamente.');
+            }
+        };
+
+        window.clearTodayData = function() {
+            if (dataStorage.length === 0) {
+                alert('La sessione corrente è già vuota.');
+                return;
+            }
+
+            const code = prompt('Inserisci il codice di sicurezza per azzerare la sessione corrente:');
+            
+            if (code !== '0000') {
+                if (code !== null) alert('Codice errato.');
+                return;
+            }
+
+            if (confirm('Confermi l\'azzeramento della sessione corrente?\n\nRecord da cancellare: ' + dataStorage.length + '\nOperazione non reversibile.')) {
+                localStorage.removeItem(storageKey);
+                dataStorage = [];
+                updateManageContent();
+                document.getElementById('lastEntry').style.display = 'none';
+                alert('Sessione azzerata correttamente.');
+            }
+        };
+
+        function showDataInfo() {
+            const lastSave = dataStorage.length > 0 ? new Date(dataStorage[dataStorage.length - 1].timestamp).toLocaleTimeString('it-IT') : 'Mai';
+            alert('📊 INFORMAZIONI SESSIONE\n\n📅 Data: ' + today + '\n🕐 Ora: ' + new Date().toLocaleTimeString('it-IT') + '\n📊 Record oggi: ' + dataStorage.length + '\n🗃️ Anomalie DB: ' + anomalieDB.length + '\n💾 Ultimo salvataggio: ' + lastSave);
+        }
+
+        function showLongPeriodReport() {
+            alert('Funzione Report Lungo Periodo non ancora implementata in questa versione');
+        }
+
+        // ========== EVENT LISTENERS ==========
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('reportModal')) closeModal('reportModal');
+            if (event.target === document.getElementById('manageModal')) closeModal('manageModal');
+            if (event.target === document.getElementById('longPeriodModal')) closeModal('longPeriodModal');
+        };
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                if (event.target.id === 'telaioPrefixInput') saveTelaioPrefixAndUpdate();
+                if (event.target.id === 'telaio' && document.getElementById('telaio').value.length === 5 && selectedAnomalia) {
+                    submitData();
+                }
+            }
+        });
+
+        // ========== INIZIALIZZAZIONE ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            if (telaioPrefixStorage) {
+                document.getElementById('telaioPrefixInput').value = telaioPrefixStorage;
+            }
+            document.getElementById('searchInput').focus();
+
+            // Setup telaio input per tastiera numerica nativa
+            const telaioInput = document.getElementById('telaio');
+            if (telaioInput) {
+                telaioInput.addEventListener('input', function(e) {
+                    // Permetti solo numeri
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    
+                    // Limita a 5 cifre
+                    if (this.value.length > 5) {
+                        this.value = this.value.slice(0, 5);
+                    }
+                    
+                    updateSubmitButton();
+                });
+                
+                telaioInput.addEventListener('focus', function() {
+                    // Se c'è l'ultimo telaio e il campo è vuoto, mostralo
+                    if (lastTelaio && this.value === '') {
+                        this.value = lastTelaio;
+                        shouldClearOnNextInput = true;
+                        // Seleziona tutto per facilitare la sostituzione
+                        this.select();
+                    }
+                });
+                
+                telaioInput.addEventListener('click', function() {
+                    // Quando si clicca, se deve essere cancellato, seleziona tutto
+                    if (shouldClearOnNextInput) {
+                        this.select();
+                    }
+                });
+                
+                telaioInput.addEventListener('keydown', function(e) {
+                    // Se deve essere cancellato e l'utente digita un numero, cancella
+                    if (shouldClearOnNextInput && e.key >= '0' && e.key <= '9') {
+                        this.value = '';
+                        shouldClearOnNextInput = false;
+                    }
+                });
+            }
+
+            if (dataStorage.length > 0) {
+                const lastRecord = dataStorage[dataStorage.length - 1];
+                updateLastEntry(lastRecord);
+                lastTelaio = lastRecord.telaiioNumerico || lastRecord.telaio.slice(-5);
+                showMessage('📅 Sessione ripresa: ' + dataStorage.length + ' record salvati', 'success');
+            }
+            
+            if (anomalieDB.length === 0) {
+                showMessage('⚠️ Database anomalie vuoto! Vai in "GESTISCI DB"', 'error');
+                document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;"><strong>DATABASE VUOTO</strong><br><br>Clicca "GESTISCI DB" per aggiungere anomalie</div>';
+            }
+        });
+    </script>
+</body>
+</html>
