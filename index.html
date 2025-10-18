@@ -55,17 +55,18 @@
         }
         .prefix-label { font-size: 14px; font-weight: bold; color: #ecf0f1; }
         .prefix-input {
-            width: 60px;
-            padding: 8px;
-            font-size: 20px;
+            width: 80px;
+            padding: 12px;
+            font-size: 24px;
             font-weight: bold;
             text-align: center;
             border: 2px solid #34495e;
-            border-radius: 6px;
+            border-radius: 8px;
             background: white;
             color: #2c3e50;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            min-height: 50px;
         }
         .prefix-input:focus {
             outline: none;
@@ -351,9 +352,10 @@
                 width: 100%;
             }
             .prefix-input { 
-                width: 50px; 
-                font-size: 18px; 
-                padding: 6px; 
+                width: 70px; 
+                font-size: 20px; 
+                padding: 10px; 
+                min-height: 45px;
             }
             .prefix-label { 
                 font-size: 12px; 
@@ -430,11 +432,17 @@
             <div class="panel">
                 <div class="section-title">📋 INSERIMENTO DATI</div>
                 
+                <div id="selectedAnomalyDisplay" style="display: none; margin-bottom: 20px; padding: 15px; background: #d5f4e6; border: 2px solid #27ae60; border-radius: 10px; text-align: center;">
+                    <div style="color: #27ae60; font-weight: bold; font-size: 16px;">
+                        ✅ Anomalia Selezionata: <span id="selectedAnomalyName"></span>
+                    </div>
+                </div>
+                
                 <div style="margin-bottom: 30px;">
                     <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 10px;">
                         <span style="font-size: 24px; font-weight: bold; color: #7f8c8d;">Prefisso:</span>
-                        <input type="text" id="telaioPrefixInput" placeholder="??" maxlength="2" onkeyup="saveTelaioPrefixAndUpdate()" onchange="saveTelaioPrefixAndUpdate()" style="width: 60px; padding: 8px; font-size: 32px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 6px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 2px;">
+                        <input type="text" id="telaioPrefixInput" placeholder="??" maxlength="2" onkeyup="saveTelaioPrefixAndUpdate()" onchange="saveTelaioPrefixAndUpdate()" style="width: 80px; padding: 12px; font-size: 28px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;">
                         <span style="font-size: 32px; font-weight: bold; color: #2c3e50;">-</span>
                         <span style="font-size: 24px; color: #7f8c8d;">(5 cifre)</span>
                     </div>
@@ -473,33 +481,6 @@
         </div>
     </div>
     
-    <div id="longPeriodModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>📅 Report di Lungo Periodo</h2>
-                <span class="close" onclick="closeModal('longPeriodModal')">&times;</span>
-            </div>
-            <div id="longPeriodContent">
-                <div style="padding: 20px;">
-                    <h3 style="color: #2c3e50; margin-bottom: 20px;">Seleziona il periodo da analizzare:</h3>
-                    <div style="display: flex; gap: 20px; margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
-                        <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Data Inizio:</label>
-                            <input type="date" id="dataInizio" style="padding: 10px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Data Fine:</label>
-                            <input type="date" id="dataFine" style="padding: 10px; font-size: 16px; border: 2px solid #bdc3c7; border-radius: 8px;">
-                        </div>
-                        <button onclick="generateLongPeriodReport()" style="padding: 15px 30px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px;">
-                            📊 GENERA REPORT
-                        </button>
-                    </div>
-                    <div id="longPeriodReportContent"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // ========== VARIABILI GLOBALI ==========
@@ -567,10 +548,12 @@
             const statusDiv = document.getElementById('statusMessage');
             statusDiv.innerHTML = message;
             statusDiv.className = 'status-message ' + type;
+            statusDiv.style.display = 'block'; // Assicura che sia visibile
             setTimeout(function() {
                 statusDiv.innerHTML = '';
                 statusDiv.className = '';
-            }, 3000);
+                statusDiv.style.display = 'none';
+            }, 2000); // Aumentato a 2000ms per essere sicuri che si veda
         }
 
         function closeModal(modalId) {
@@ -580,22 +563,24 @@
         // ========== AUTO-SALVATAGGIO E PULIZIA ==========
         function cleanOldData() {
             const threshold = new Date(Date.now() - (35 * 24 * 60 * 60 * 1000));
-            let deletedCount = 0;
+            const keysToDelete = [];
             
+            // Raccogli chiavi da eliminare in un passaggio
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('anomalieData_')) {
                     const dateStr = key.replace('anomalieData_', '');
                     if (new Date(dateStr) < threshold) {
-                        localStorage.removeItem(key);
-                        deletedCount++;
-                        i--;
+                        keysToDelete.push(key);
                     }
                 }
             }
             
-            if (deletedCount > 0) {
-                console.log('Pulizia automatica: ' + deletedCount + ' sessioni eliminate');
+            // Elimina tutte le chiavi in un secondo passaggio
+            keysToDelete.forEach(key => localStorage.removeItem(key));
+            
+            if (keysToDelete.length > 0) {
+                console.log('Pulizia automatica: ' + keysToDelete.length + ' sessioni eliminate');
             }
         }
 
@@ -622,41 +607,63 @@
                 return;
             }
 
-            const filtered = anomalieDB.filter(function(a) {
-                return a.nome.toLowerCase().includes(query) || a.ute.toLowerCase().includes(query);
-            });
+            // Ottimizzazione: usa for loop invece di filter per velocità
+            const filtered = [];
+            for (let i = 0; i < anomalieDB.length; i++) {
+                const a = anomalieDB[i];
+                if (a.nome.toLowerCase().includes(query) || a.ute.toLowerCase().includes(query)) {
+                    filtered.push(a);
+                }
+            }
 
             if (filtered.length === 0) {
                 resultsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;">Nessuna anomalia trovata</div>';
                 return;
             }
 
+            // Ottimizzazione: usa template literal per velocità
             let html = '';
-            filtered.forEach(function(a) {
-                const stelle = '⭐'.repeat(a.gravita);
-                html += '<div class="result-item" onclick="selectAnomalia(\'' + a.nome.replace(/'/g, "\\'") + '\')">';
-                html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
-                html += '<span>' + a.nome + '</span>';
-                html += '<div style="display: flex; gap: 10px; align-items: center;">';
-                html += '<span style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">' + a.ute + '</span>';
-                html += '<span style="font-size: 16px;">' + stelle + '</span>';
-                html += '</div></div></div>';
-            });
+            for (let i = 0; i < filtered.length; i++) {
+                const a = filtered[i];
+                html += `<div class="result-item" onclick="selectAnomalia('${a.nome.replace(/'/g, "\\'")}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${a.nome}</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${a.ute}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }
             
             resultsList.innerHTML = html;
         }
 
         function selectAnomalia(anomaliaNome) {
-            selectedAnomalia = anomalieDB.find(function(a) { return a.nome === anomaliaNome; });
+            // Ottimizzazione: usa for loop invece di find
+            selectedAnomalia = null;
+            for (let i = 0; i < anomalieDB.length; i++) {
+                if (anomalieDB[i].nome === anomaliaNome) {
+                    selectedAnomalia = anomalieDB[i];
+                    break;
+                }
+            }
             
-            document.querySelectorAll('.result-item').forEach(function(item) {
+            // Ottimizzazione: usa querySelectorAll una sola volta
+            const resultItems = document.querySelectorAll('.result-item');
+            for (let i = 0; i < resultItems.length; i++) {
+                const item = resultItems[i];
                 item.classList.remove('selected');
-                if (item.textContent.includes(anomaliaNome)) item.classList.add('selected');
-            });
+                if (item.textContent.includes(anomaliaNome)) {
+                    item.classList.add('selected');
+                }
+            }
+
+            // Mostra l'anomalia selezionata nel campo dedicato
+            document.getElementById('selectedAnomalyName').textContent = anomaliaNome;
+            document.getElementById('selectedAnomalyDisplay').style.display = 'block';
 
             if (lastTelaio) document.getElementById('telaio').value = lastTelaio;
             updateSubmitButton();
-            showMessage('✅ Anomalia selezionata: ' + anomaliaNome, 'success');
         }
 
         // ========== GESTIONE INPUT TELAIO ==========
@@ -664,11 +671,13 @@
             document.getElementById('telaio').value = '';
             shouldClearOnNextInput = false;
             updateSubmitButton();
+            // L'anomalia selezionata rimane visibile
         }
 
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitBtn');
-            const isReady = selectedAnomalia && document.getElementById('telaio').value.length === 5;
+            const telaioValue = document.getElementById('telaio').value;
+            const isReady = selectedAnomalia && telaioValue.length === 5;
             
             if (submitBtn) {
                 submitBtn.disabled = !isReady;
@@ -708,9 +717,14 @@
             localStorage.setItem(storageKey, JSON.stringify(dataStorage));
             
             updateLastEntry(data);
+            
+            // Mostra messaggio di successo
             showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
             
-            setTimeout(function() { resetForm(); }, 2000);
+            // Reset form dopo un breve delay per mostrare il messaggio
+            setTimeout(function() { 
+                resetForm(); 
+            }, 800); // Delay ridotto per velocità ma sufficiente per vedere il messaggio
         }
 
         function updateLastEntry(data) {
@@ -757,11 +771,16 @@
         }
 
         function resetForm() {
+            // Reset veloce per produzione
             document.getElementById('searchInput').value = '';
             document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">Digita una parola chiave per cercare le anomalie</div>';
-            document.getElementById('statusMessage').innerHTML = '';
+            // Non cancellare il messaggio di successo se è ancora visibile
+            document.getElementById('selectedAnomalyDisplay').style.display = 'none';
             selectedAnomalia = null;
             updateSubmitButton();
+            
+            // Focus immediato sul campo ricerca per velocità
+            document.getElementById('searchInput').focus();
         }
 
         // ========== REPORT FUNCTIONS ==========
@@ -772,12 +791,7 @@
             if (dataStorage.length === 0) {
                 let html = '<div style="padding: 20px; background: #fff3cd; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">';
                 html += '<strong>⚠️ Nessun dato nella sessione corrente</strong><br>';
-                html += '<span style="color: #856404;">Non ci sono anomalie registrate oggi. Puoi comunque accedere al Report di Lungo Periodo.</span>';
-                html += '</div>';
-                html += '<div style="text-align: center; margin-top: 30px;">';
-                html += '<button onclick="showLongPeriodReport()" style="padding: 15px 30px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">';
-                html += '📅 REPORT DI LUNGO PERIODO';
-                html += '</button>';
+                html += '<span style="color: #856404;">Non ci sono anomalie registrate oggi.</span>';
                 html += '</div>';
                 
                 document.getElementById('reportContent').innerHTML = html;
@@ -821,10 +835,6 @@
 
             let html = '<div style="display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">';
             html += '<span style="font-weight: bold; margin-right: 10px;">FILTRI:</span>';
-            html += '<button onclick="filterByGravita(0)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 0 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 0 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">📊 TUTTE</button>';
-            html += '<button onclick="filterByGravita(1)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 1 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 1 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐</button>';
-            html += '<button onclick="filterByGravita(2)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 2 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 2 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐⭐</button>';
-            html += '<button onclick="filterByGravita(3)" style="padding: 8px 16px; background: ' + (currentGravitaFilter === 3 ? '#3498db' : '#ecf0f1') + '; color: ' + (currentGravitaFilter === 3 ? 'white' : '#2c3e50') + '; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">⭐⭐⭐</button>';
             html += '<select id="uteFilter" onchange="filterByUte(this.value)" style="padding: 8px 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 14px; font-weight: bold;">';
             html += '<option value="">🏭 TUTTE LE UTE</option>';
             
@@ -844,7 +854,6 @@
             html += '</div>';
             html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
             html += '<button onclick="downloadCompleteReport()" style="padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">📊 SCARICA REPORT</button>';
-            html += '<button onclick="showLongPeriodReport()" style="padding: 12px 20px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">📅 REPORT LUNGO PERIODO</button>';
             html += '</div>';
             html += '</div>';
             html += '</div>';
@@ -878,15 +887,12 @@
                 const width = (count / maxCount) * 100;
                 const sampleRecord = filteredData.find(function(item) { return item.anomalia === anomalia; });
                 const ute = sampleRecord ? sampleRecord.ute : 'Non assegnata';
-                const gravita = sampleRecord ? sampleRecord.gravita : 2;
-                const stelle = '⭐'.repeat(gravita);
                 
                 html += '<div class="chart-bar" id="bar-' + index + '">';
                 html += '<div class="chart-label">';
                 html += (index + 1) + '. ' + anomalia;
                 html += '<div style="display: inline-flex; gap: 8px; margin-left: 10px;">';
                 html += '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">' + ute + '</span>';
-                html += '<span style="font-size: 14px;">' + stelle + '</span>';
                 html += '</div>';
                 html += '</div>';
                 html += '<div class="chart-progress">';
@@ -914,7 +920,13 @@
                 let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: "' + anomalia + '" (' + telaiRelated.length + ')</h4>';
                 
                 telaiRelated.forEach(function(item, idx) {
-                    detailHtml += '<div class="detail-telaio"><span>' + (idx + 1) + '. <strong>' + item.telaio + '</strong></span><span style="color: #6c757d; font-size: 12px;">' + item.date + ' - ' + item.time + '</span></div>';
+                    detailHtml += '<div class="detail-telaio" style="display: flex; justify-content: space-between; align-items: center;">';
+                    detailHtml += '<div style="display: flex; align-items: center; gap: 10px;">';
+                    detailHtml += '<span>' + (idx + 1) + '. <strong>' + item.telaio + '</strong></span>';
+                    detailHtml += '<span style="color: #6c757d; font-size: 12px;">' + item.date + ' - ' + item.time + '</span>';
+                    detailHtml += '</div>';
+                    detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + item.telaio + '\', ' + index + ')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px;">❌</button>';
+                    detailHtml += '</div>';
                 });
                 
                 detailHtml += '</div>';
@@ -924,6 +936,49 @@
             } else {
                 detailsDiv.style.display = 'none';
                 btn.textContent = '👁️ Dettagli';
+            }
+        }
+
+        function deleteTelaioFromAnomalia(anomaliaName, telaioToDelete, reportIndex) {
+            // Trova l'indice del record da eliminare
+            const recordIndex = dataStorage.findIndex(function(item) {
+                return item.anomalia === anomaliaName && item.telaio === telaioToDelete;
+            });
+            
+            if (recordIndex === -1) {
+                alert('❌ Record non trovato');
+                return;
+            }
+            
+            const record = dataStorage[recordIndex];
+            const confirmMessage = '❓ CONFERMI L\'ELIMINAZIONE?\n\n🔧 Anomalia: ' + anomaliaName + '\n🏷️ Telaio: ' + telaioToDelete + '\n🕐 Data: ' + record.date + ' - ' + record.time + '\n\n⚠️ Operazione NON reversibile!';
+            
+            if (confirm(confirmMessage)) {
+                // Rimuovi il record dal dataStorage
+                dataStorage.splice(recordIndex, 1);
+                
+                // Salva nel localStorage
+                localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+                
+                // Aggiorna la visualizzazione dei dettagli
+                toggleDetails(anomaliaName, reportIndex);
+                
+                // Aggiorna il report se è aperto
+                if (document.getElementById('reportModal').style.display === 'block') {
+                    renderReport();
+                }
+                
+                // Aggiorna l'ultimo inserimento se necessario
+                if (dataStorage.length > 0) {
+                    const newLastEntry = dataStorage[dataStorage.length - 1];
+                    updateLastEntry(newLastEntry);
+                    lastTelaio = newLastEntry.telaiioNumerico || newLastEntry.telaio.slice(-5);
+                } else {
+                    document.getElementById('lastEntry').style.display = 'none';
+                    lastTelaio = '';
+                }
+                
+                showMessage('✅ Telaio eliminato! Totale record: ' + dataStorage.length, 'success');
             }
         }
 
@@ -1075,7 +1130,6 @@
                 const count = entry[1];
                 const percent = ((count / total) * 100).toFixed(1);
                 const details = anomaliaDetails[anomalia];
-                const stelle = '⭐'.repeat(details.gravita);
                 const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
                 
                 emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
@@ -1087,7 +1141,6 @@
                 emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #2c3e50; font-size: 14px;">' + anomalia + '</p>\n';
                 emailHTML += '              <p style="margin: 0; font-size: 12px;">\n';
                 emailHTML += '                <span style="background-color: #3498db; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
-                emailHTML += '                <span style="margin-left: 6px; font-size: 12px;">' + stelle + '</span>\n';
                 emailHTML += '              </p>\n';
                 emailHTML += '            </td>\n';
                 emailHTML += '            <td style="padding: 12px; vertical-align: middle; font-size: 16px;">\n';
@@ -1165,20 +1218,17 @@
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">GRAVITÀ</th>\n';
             emailHTML += '            </tr>\n';
             emailHTML += '          </thead>\n';
             emailHTML += '          <tbody>\n';
             
             sortedData.forEach(function(item, index) {
-                const stelle = '⭐'.repeat(item.gravita || 2);
                 const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
                 emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + item.anomalia + '</td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + stelle + '</td>\n';
                 emailHTML += '            </tr>\n';
             });
             
@@ -1302,15 +1352,7 @@
             html += '</select>';
             html += '</div>';
 
-            html += '<div>';
-            html += '<label style="display: block; font-weight: bold; margin-bottom: 5px;">Gravità:</label>';
-            html += '<div style="display: flex; gap: 10px; padding: 8px 0;">';
-            html += '<button type="button" onclick="setGravita(1)" id="grav1" style="padding: 10px 20px; background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐</button>';
-            html += '<button type="button" onclick="setGravita(2)" id="grav2" style="padding: 10px 20px; background: #fff3cd; border: 2px solid #f39c12; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐⭐</button>';
-            html += '<button type="button" onclick="setGravita(3)" id="grav3" style="padding: 10px 20px; background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 8px; cursor: pointer; font-size: 20px;">⭐⭐⭐</button>';
-            html += '</div>';
             html += '<input type="hidden" id="gravitaValue" value="2">';
-            html += '</div>';
             html += '</div>';
 
             html += '<div style="display: flex; gap: 10px;">';
@@ -1396,13 +1438,11 @@
                     return item.nome === anomalia.nome && item.ute === anomalia.ute && item.gravita === anomalia.gravita; 
                 });
                 
-                const stelle = '⭐'.repeat(anomalia.gravita);
                 html += '<div style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #ecf0f1;">';
                 html += '<div style="flex: 1; font-size: 14px; color: #2c3e50;">';
                 html += '<strong>' + anomalia.nome + '</strong><br>';
                 html += '<div style="display: flex; gap: 10px; margin-top: 5px;">';
                 html += '<span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px;">' + anomalia.ute + '</span>';
-                html += '<span style="font-size: 14px;">' + stelle + '</span>';
                 html += '</div>';
                 html += '</div>';
                 html += '<div style="display: flex; gap: 5px;">';
@@ -1416,25 +1456,8 @@
         }
 
         function setGravita(value) {
+            // Funzione mantenuta per compatibilità ma non più utilizzata
             document.getElementById('gravitaValue').value = value;
-            
-            for (let i = 1; i <= 3; i++) {
-                const btn = document.getElementById('grav' + i);
-                btn.style.background = '#ecf0f1';
-                btn.style.borderColor = '#bdc3c7';
-            }
-            
-            const selectedBtn = document.getElementById('grav' + value);
-            if (value === 1) {
-                selectedBtn.style.background = '#d5f4e6';
-                selectedBtn.style.borderColor = '#27ae60';
-            } else if (value === 2) {
-                selectedBtn.style.background = '#fff3cd';
-                selectedBtn.style.borderColor = '#f39c12';
-            } else {
-                selectedBtn.style.background = '#fdf2f2';
-                selectedBtn.style.borderColor = '#e74c3c';
-            }
         }
 
         function editAnomalia(index) {
@@ -1599,15 +1622,11 @@
             alert('📊 INFORMAZIONI SESSIONE\n\n📅 Data: ' + today + '\n🕐 Ora: ' + new Date().toLocaleTimeString('it-IT') + '\n📊 Record oggi: ' + dataStorage.length + '\n🗃️ Anomalie DB: ' + anomalieDB.length + '\n💾 Ultimo salvataggio: ' + lastSave);
         }
 
-        function showLongPeriodReport() {
-            alert('Funzione Report Lungo Periodo non ancora implementata in questa versione');
-        }
 
         // ========== EVENT LISTENERS ==========
         window.onclick = function(event) {
             if (event.target === document.getElementById('reportModal')) closeModal('reportModal');
             if (event.target === document.getElementById('manageModal')) closeModal('manageModal');
-            if (event.target === document.getElementById('longPeriodModal')) closeModal('longPeriodModal');
         };
 
         document.addEventListener('keydown', function(event) {
@@ -1615,6 +1634,10 @@
                 if (event.target.id === 'telaioPrefixInput') saveTelaioPrefixAndUpdate();
                 if (event.target.id === 'telaio' && document.getElementById('telaio').value.length === 5 && selectedAnomalia) {
                     submitData();
+                    // Focus automatico sul campo ricerca dopo l'invio
+                    setTimeout(function() {
+                        document.getElementById('searchInput').focus();
+                    }, 100);
                 }
             }
         });
