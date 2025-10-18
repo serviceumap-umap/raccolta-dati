@@ -1016,8 +1016,23 @@
 
             htmlContent += '</tbody></table><div class="footer"><strong>📋 Report generato automaticamente</strong><br>Per utilizzarlo: seleziona tutto (Ctrl+A), copia (Ctrl+C) e incolla nella tua email.</div></body></html>';
 
+            // Rileva se è iOS per gestire diversamente
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
             const newWindow = window.open('', '_blank', 'width=700,height=600,scrollbars=yes');
-            newWindow.document.write(htmlContent);
+            
+            if (isIOS) {
+                // Per iOS: aggiungi meta tag per encoding corretto
+                newWindow.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">');
+                newWindow.document.write('<title>Dettaglio ' + anomaliaName + ' - ' + today + '</title>');
+                newWindow.document.write('</head><body>');
+                newWindow.document.write(htmlContent);
+                newWindow.document.write('</body></html>');
+            } else {
+                // Per PC: comportamento normale
+                newWindow.document.write(htmlContent);
+            }
+            
             newWindow.document.close();
             newWindow.document.title = 'Dettaglio_' + anomaliaName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today;
         }
@@ -1079,6 +1094,9 @@
             }
 
             let emailHTML = '<!-- INIZIO REPORT - COPIA DA QUI -->\n';
+            emailHTML += '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+            emailHTML += '<title>Report Anomalie - ' + day + '/' + month + '/' + year + '</title>\n';
+            emailHTML += '</head><body>\n';
             emailHTML += '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #ffffff;">\n\n';
             
             emailHTML += '  <!-- HEADER -->\n';
@@ -1249,6 +1267,7 @@
             emailHTML += '  </table>\n\n';
             
             emailHTML += '</div>\n';
+            emailHTML += '</body></html>\n';
             emailHTML += '<!-- FINE REPORT - COPIA FINO A QUI -->\n\n';
             
             emailHTML += '\n\n\n';
@@ -1293,17 +1312,42 @@
             emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n';
             emailHTML += '-->\n';
             
-            const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            // Rileva se è iOS per gestire diversamente il download
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             
-            alert('✅ REPORT EMAIL SCARICATO!\n\n🔧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Apri il file con Notepad e segui le istruzioni in fondo per inserirlo in Outlook Web!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+            if (isIOS) {
+                // Per iOS: apri in nuova finestra con encoding corretto
+                const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+                newWindow.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">');
+                newWindow.document.write('<title>Report Anomalie - ' + day + '/' + month + '/' + year + '</title>');
+                newWindow.document.write('</head><body>');
+                newWindow.document.write(emailHTML);
+                newWindow.document.write('</body></html>');
+                newWindow.document.close();
+                newWindow.document.title = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes;
+                
+                // Mostra istruzioni per salvare su iOS
+                alert('📱 REPORT APERTO IN NUOVA FINESTRA\n\nPer salvare su iPhone:\n1. Tocca "Condividi" (icona quadrata con freccia)\n2. Seleziona "Salva in File"\n3. Scegli la cartella desiderata\n\n✅ Il report è formattato correttamente!');
+            } else {
+                // Per PC: download normale
+                const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+            
+            if (isIOS) {
+                // Alert specifico per iOS
+                alert('✅ REPORT APERTO IN NUOVA FINESTRA!\n\n📱 Per salvare su iPhone:\n1. Tocca "Condividi" (icona quadrata con freccia)\n2. Seleziona "Salva in File"\n3. Scegli la cartella desiderata\n\n💡 Il report è già formattato correttamente per email!');
+            } else {
+                // Alert per PC
+                alert('✅ REPORT EMAIL SCARICATO!\n\n🔧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Apri il file con Notepad e segui le istruzioni in fondo per inserirlo in Outlook Web!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+            }
         }
 
         // ========== GESTIONE DATABASE ANOMALIE ==========
