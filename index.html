@@ -1023,298 +1023,321 @@
         }
 
         function downloadCompleteReport() {
-            if (dataStorage.length === 0) {
-                alert('❌ Nessun dato disponibile per il download');
-                return;
-            }
+    if (dataStorage.length === 0) {
+        alert('❌ Nessun dato disponibile per il download');
+        return;
+    }
 
-            const frequencies = {};
-            const anomaliaDetails = {};
-            
-            dataStorage.forEach(function(item) {
-                if (!frequencies[item.anomalia]) {
-                    frequencies[item.anomalia] = 0;
-                    anomaliaDetails[item.anomalia] = {
-                        ute: item.ute || 'Non assegnata',
-                        gravita: item.gravita || 2
-                    };
-                }
-                frequencies[item.anomalia]++;
-            });
-            
-            const sorted = Object.entries(frequencies).sort(function(a, b) { return b[1] - a[1]; });
-            const top5 = sorted.slice(0, 5);
-            const total = dataStorage.length;
-            const now = new Date();
-            const day = now.getDate().toString().padStart(2, '0');
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const year = now.getFullYear();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            
-            const sortedData = dataStorage.slice().sort(function(a, b) {
-                const freqDiff = frequencies[b.anomalia] - frequencies[a.anomalia];
-                return freqDiff !== 0 ? freqDiff : a.anomalia.localeCompare(b.anomalia);
-            });
-
-            const uteStats = {};
-            dataStorage.forEach(function(item) {
-                const ute = item.ute || 'Non assegnata';
-                uteStats[ute] = (uteStats[ute] || 0) + 1;
-            });
-            
-            const sortedUteStats = Object.entries(uteStats).sort(function(a, b) { return b[1] - a[1]; });
-            const maxUteCount = sortedUteStats[0] ? sortedUteStats[0][1] : 1;
-            const maxTop5Count = top5[0] ? top5[0][1] : 1;
-
-            function createTextBar(value, maxValue, maxBars, color) {
-                const barCount = Math.round((value / maxValue) * maxBars);
-                const emptyCount = maxBars - barCount;
-                const filledBar = '█';
-                const emptyBar = '░';
-                return '<span style="color: ' + color + '; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
-                       filledBar.repeat(barCount) + 
-                       '</span><span style="color: #ddd; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
-                       emptyBar.repeat(emptyCount) + '</span>';
-            }
-
-            let emailHTML = '<!-- INIZIO REPORT - COPIA DA QUI -->\n';
-            emailHTML += '<!DOCTYPE html><html><head>\n';
-            emailHTML += '<meta charset="UTF-8">\n';
-            emailHTML += '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
-            emailHTML += '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n';
-            emailHTML += '<title>Report Anomalie - ' + day + '/' + month + '/' + year + '</title>\n';
-            emailHTML += '<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5;}</style>\n';
-            emailHTML += '</head><body>\n';
-            emailHTML += '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">\n\n';
-            
-            emailHTML += '  <!-- HEADER -->\n';
-            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #2c3e50; border-radius: 10px 10px 0 0;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td style="padding: 30px; text-align: center;">\n';
-            emailHTML += '        <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px 0; font-weight: bold;">📊 REPORT ANOMALIE</h1>\n';
-            emailHTML += '        <p style="color: #ecf0f1; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <!-- INFORMAZIONI SESSIONE -->\n';
-            emailHTML += '  <table width="100%" cellpadding="15" cellspacing="0" border="0" style="background-color: #ecf0f1;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
-            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📅 DATA REPORT</p>\n';
-            emailHTML += '          <p style="color: #2c3e50; font-size: 18px; margin: 0; font-weight: bold;">' + day + '/' + month + '/' + year + '</p>\n';
-            emailHTML += '        </div>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
-            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📊 TOTALE KO</p>\n';
-            emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + total + '</p>\n';
-            emailHTML += '        </div>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;">\n';
-            emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-            emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">🔧 ANOMALIE UNICHE</p>\n';
-            emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + Object.keys(frequencies).length + '</p>\n';
-            emailHTML += '        </div>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
-            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <!-- TOP 5 ANOMALIE -->\n';
-            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td>\n';
-            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">🏆 TOP 5 ANOMALIE RIPETITIVE</h2>\n';
-            
-            top5.forEach(function(entry, index) {
-                const anomalia = entry[0];
-                const count = entry[1];
-                const percent = ((count / total) * 100).toFixed(1);
-                const details = anomaliaDetails[anomalia];
-                const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
-                
-                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
-                emailHTML += '          <tr>\n';
-                emailHTML += '            <td width="50" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
-                emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #e74c3c;">' + (index + 1) + '</span>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td width="200" style="padding: 12px; vertical-align: middle;">\n';
-                emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #2c3e50; font-size: 14px;">' + anomalia + '</p>\n';
-                emailHTML += '              <p style="margin: 0; font-size: 12px;">\n';
-                emailHTML += '                <span style="background-color: #3498db; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
-                emailHTML += '              </p>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td style="padding: 12px; vertical-align: middle; font-size: 16px;">\n';
-                emailHTML += '              ' + textBar + '\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
-                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
-                emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">CASI</p>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;">\n';
-                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</p>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '          </tr>\n';
-                emailHTML += '        </table>\n';
-            });
-            
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
-            emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
-            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <!-- STATISTICHE PER UTE -->\n';
-            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td>\n';
-            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #3498db; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
-            
-            sortedUteStats.forEach(function(entry) {
-                const ute = entry[0];
-                const count = entry[1];
-                const percent = ((count / total) * 100).toFixed(1);
-                const textBar = createTextBar(count, maxUteCount, 25, '#3498db');
-                
-                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">\n';
-                emailHTML += '          <tr>\n';
-                emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;">\n';
-                emailHTML += '              <span style="background-color: #3498db; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;">\n';
-                emailHTML += '              ' + textBar + '\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;">\n';
-                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
-                emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">KO</p>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;">\n';
-                emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</p>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '          </tr>\n';
-                emailHTML += '        </table>\n';
-            });
-            
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
-            emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
-            emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <!-- ELENCO COMPLETO TELAI -->\n';
-            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td>\n';
-            emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
-            emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse;">\n';
-            emailHTML += '          <thead>\n';
-            emailHTML += '            <tr style="background-color: #34495e;">\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 50px;">#</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
-            emailHTML += '            </tr>\n';
-            emailHTML += '          </thead>\n';
-            emailHTML += '          <tbody>\n';
-            
-            sortedData.forEach(function(item, index) {
-                const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
-                emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + item.anomalia + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
-                emailHTML += '            </tr>\n';
-            });
-            
-            emailHTML += '          </tbody>\n';
-            emailHTML += '        </table>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '  <!-- FOOTER -->\n';
-            emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #34495e; border-radius: 0 0 10px 10px; margin-top: 20px;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td style="padding: 20px; text-align: center;">\n';
-            emailHTML += '        <p style="color: #ecf0f1; font-size: 13px; margin: 0;">🔧 Report generato automaticamente dal Sistema di Raccolta Dati Anomalie</p>\n';
-            emailHTML += '        <p style="color: #95a5a6; font-size: 11px; margin: 10px 0 0 0;">Documento generato il ' + day + '/' + month + '/' + year + ' alle ore ' + hours + ':' + minutes + '</p>\n';
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
-            
-            emailHTML += '</div>\n';
-            emailHTML += '</body></html>\n';
-            emailHTML += '<!-- FINE REPORT - COPIA FINO A QUI -->\n\n';
-            
-            emailHTML += '\n\n\n';
-            emailHTML += '<!--\n';
-            emailHTML += '╔═══════════════════════════════════════════════════════════════════════════╗\n';
-            emailHTML += '  🔧 COME INSERIRE QUESTO REPORT IN OUTLOOK WEB - GUIDA PASSO-PASSO\n';
-            emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n\n';
-            emailHTML += '✅ METODO 1 - MODALITÀ HTML (CONSIGLIATO)\n';
-            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-            emailHTML += '1. Apri questo file con NOTEPAD (Blocco Note) o qualsiasi editor di testo\n';
-            emailHTML += '2. Seleziona TUTTO il testo da "<!-- INIZIO REPORT" a "<!-- FINE REPORT"\n';
-            emailHTML += '3. Copia (Ctrl+C)\n';
-            emailHTML += '4. Vai su Outlook Web (https://outlook.office.com)\n';
-            emailHTML += '5. Clicca su "Nuova email"\n';
-            emailHTML += '6. Clicca sui 3 puntini (...) in basso nella finestra di composizione\n';
-            emailHTML += '7. Seleziona "Cambia visualizzazione" → "Visualizza HTML"\n';
-            emailHTML += '8. INCOLLA il codice copiato (Ctrl+V)\n';
-            emailHTML += '9. Clicca di nuovo sui 3 puntini (...)\n';
-            emailHTML += '10. Seleziona "Cambi visualizzazione" → "Predefinito"\n';
-            emailHTML += '11. ✨ Il report apparirà formattato perfettamente!\n\n';
-            emailHTML += '⚠️ NOTA: Se non vedi "Visualizza HTML", clicca su "Mostra da" per espandere.\n\n\n';
-            emailHTML += '✅ METODO 2 - COPIA E INCOLLA DIRETTO (PIÙ VELOCE MA MENO PRECISO)\n';
-            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-            emailHTML += '1. Apri il file "Report_Email_[data].html" nel BROWSER (Chrome/Edge)\n';
-            emailHTML += '2. Seleziona tutto il contenuto visibile (Ctrl+A)\n';
-            emailHTML += '3. Copia (Ctrl+C)\n';
-            emailHTML += '4. Vai su Outlook Web\n';
-            emailHTML += '5. Clicca "Nuova email"\n';
-            emailHTML += '6. Incolla direttamente nel corpo email (Ctrl+V)\n';
-            emailHTML += '7. ⚠️ Alcuni stili potrebbero non essere perfetti\n\n\n';
-            emailHTML += '✅ METODO 3 - ALLEGARE IL FILE (PIÙ SICURO)\n';
-            emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-            emailHTML += '1. In Outlook Web, clicca "Nuova email"\n';
-            emailHTML += '2. Scrivi il testo della email\n';
-            emailHTML += '3. Clicca l\'icona della graffetta 📎\n';
-            emailHTML += '4. Seleziona il file "Report_Email_[data].html"\n';
-            emailHTML += '5. Il destinatario può aprirlo con un doppio clic\n\n\n';
-            emailHTML += '💡 SUGGERIMENTI:\n';
-            emailHTML += '• Il METODO 1 garantisce la migliore compatibilità con Outlook\n';
-            emailHTML += '• Se hai problemi, usa il METODO 3 (allegato)\n';
-            emailHTML += '• Puoi testare inviando una email a te stesso prima!\n\n';
-            emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n';
-            emailHTML += '-->\n';
-            
-            // Download normale per tutti i dispositivi con encoding corretto
-            const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            // Alert unificato per tutti i dispositivi
-            alert('✅ REPORT EMAIL SCARICATO!\n\n🔧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Il file è formattato correttamente con encoding UTF-8 per compatibilità mobile e desktop!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+    const frequencies = {};
+    const anomaliaDetails = {};
+    
+    dataStorage.forEach(function(item) {
+        if (!frequencies[item.anomalia]) {
+            frequencies[item.anomalia] = 0;
+            anomaliaDetails[item.anomalia] = {
+                ute: item.ute || 'Non assegnata',
+                gravita: item.gravita || 2
+            };
         }
+        frequencies[item.anomalia]++;
+    });
+    
+    const sorted = Object.entries(frequencies).sort(function(a, b) { return b[1] - a[1]; });
+    const top5 = sorted.slice(0, 5);
+    const total = dataStorage.length;
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    
+    const sortedData = dataStorage.slice().sort(function(a, b) {
+        const freqDiff = frequencies[b.anomalia] - frequencies[a.anomalia];
+        return freqDiff !== 0 ? freqDiff : a.anomalia.localeCompare(b.anomalia);
+    });
+
+    const uteStats = {};
+    dataStorage.forEach(function(item) {
+        const ute = item.ute || 'Non assegnata';
+        uteStats[ute] = (uteStats[ute] || 0) + 1;
+    });
+    
+    const sortedUteStats = Object.entries(uteStats).sort(function(a, b) { return b[1] - a[1]; });
+    const maxUteCount = sortedUteStats[0] ? sortedUteStats[0][1] : 1;
+    const maxTop5Count = top5[0] ? top5[0][1] : 1;
+
+    function createTextBar(value, maxValue, maxBars, color) {
+        const barCount = Math.round((value / maxValue) * maxBars);
+        const emptyCount = maxBars - barCount;
+        const filledBar = '█';
+        const emptyBar = '░';
+        return '<span style="color: ' + color + '; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
+               filledBar.repeat(barCount) + 
+               '</span><span style="color: #ddd; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' + 
+               emptyBar.repeat(emptyCount) + '</span>';
+    }
+
+    let emailHTML = '<!-- INIZIO REPORT - COPIA DA QUI -->\n';
+    emailHTML += '<!DOCTYPE html><html><head>\n';
+    emailHTML += '<meta charset="UTF-8">\n';
+    emailHTML += '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+    emailHTML += '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n';
+    emailHTML += '<title>Report Anomalie - ' + day + '/' + month + '/' + year + '</title>\n';
+    
+    // STILI CSS RESPONSIVE
+    emailHTML += '<style>\n';
+    emailHTML += 'body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5;}\n';
+    emailHTML += '.report-container{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#ffffff;padding:0;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);}\n';
+    
+    // Media Query per Mobile
+    emailHTML += '@media only screen and (max-width: 600px) {\n';
+    emailHTML += '  body{padding:10px !important;}\n';
+    emailHTML += '  .report-container{width:100% !important;max-width:100% !important;padding:0 !important;}\n';
+    emailHTML += '  h1{font-size:20px !important;padding:15px !important;}\n';
+    emailHTML += '  h2{font-size:18px !important;}\n';
+    emailHTML += '  p{font-size:14px !important;}\n';
+    emailHTML += '  table{width:100% !important;}\n';
+    emailHTML += '  td{padding:8px !important;font-size:12px !important;}\n';
+    emailHTML += '  th{padding:8px !important;font-size:11px !important;}\n';
+    emailHTML += '  .stats-box{padding:10px !important;}\n';
+    emailHTML += '  .bar-rank{display:block !important;text-align:left !important;margin-bottom:5px !important;}\n';
+    emailHTML += '  .bar-label{display:block !important;width:100% !important;margin-bottom:8px !important;}\n';
+    emailHTML += '  .bar-progress{display:block !important;width:100% !important;margin:5px 0 !important;}\n';
+    emailHTML += '  .bar-value{display:inline-block !important;width:auto !important;margin-right:15px !important;margin-top:5px !important;}\n';
+    emailHTML += '}\n';
+    emailHTML += '</style>\n';
+    
+    emailHTML += '</head><body>\n';
+    emailHTML += '<div class="report-container">\n\n';
+    
+    emailHTML += '  <!-- HEADER -->\n';
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #2c3e50; border-radius: 10px 10px 0 0;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td style="padding: 30px; text-align: center;">\n';
+    emailHTML += '        <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px 0; font-weight: bold;">📊 REPORT ANOMALIE</h1>\n';
+    emailHTML += '        <p style="color: #ecf0f1; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <!-- INFORMAZIONI SESSIONE -->\n';
+    emailHTML += '  <table width="100%" cellpadding="15" cellspacing="0" border="0" style="background-color: #ecf0f1;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
+    emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📅 DATA REPORT</p>\n';
+    emailHTML += '          <p style="color: #2c3e50; font-size: 18px; margin: 0; font-weight: bold;">' + day + '/' + month + '/' + year + '</p>\n';
+    emailHTML += '        </div>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
+    emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📊 TOTALE KO</p>\n';
+    emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + total + '</p>\n';
+    emailHTML += '        </div>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
+    emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
+    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">🔧 ANOMALIE UNICHE</p>\n';
+    emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + Object.keys(frequencies).length + '</p>\n';
+    emailHTML += '        </div>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+    emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <!-- TOP 5 ANOMALIE -->\n';
+    emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td>\n';
+    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">🏆 TOP 5 ANOMALIE RIPETITIVE</h2>\n';
+    
+    top5.forEach(function(entry, index) {
+        const anomalia = entry[0];
+        const count = entry[1];
+        const percent = ((count / total) * 100).toFixed(1);
+        const details = anomaliaDetails[anomalia];
+        const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
+        
+        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
+        emailHTML += '          <tr>\n';
+        emailHTML += '            <td width="50" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-rank">\n';
+        emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #e74c3c;">' + (index + 1) + '</span>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td width="200" style="padding: 12px; vertical-align: middle;" class="bar-label">\n';
+        emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #2c3e50; font-size: 14px;">' + anomalia + '</p>\n';
+        emailHTML += '              <p style="margin: 0; font-size: 12px;">\n';
+        emailHTML += '                <span style="background-color: #3498db; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
+        emailHTML += '              </p>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td style="padding: 12px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
+        emailHTML += '              ' + textBar + '\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
+        emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">CASI</p>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</p>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '          </tr>\n';
+        emailHTML += '        </table>\n';
+    });
+    
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+    emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+    emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <!-- STATISTICHE PER UTE -->\n';
+    emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td>\n';
+    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #3498db; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
+    
+    sortedUteStats.forEach(function(entry) {
+        const ute = entry[0];
+        const count = entry[1];
+        const percent = ((count / total) * 100).toFixed(1);
+        const textBar = createTextBar(count, maxUteCount, 25, '#3498db');
+        
+        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">\n';
+        emailHTML += '          <tr>\n';
+        emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;" class="bar-label">\n';
+        emailHTML += '              <span style="background-color: #3498db; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
+        emailHTML += '              ' + textBar + '\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
+        emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">KO</p>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</p>\n';
+        emailHTML += '            </td>\n';
+        emailHTML += '          </tr>\n';
+        emailHTML += '        </table>\n';
+    });
+    
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
+    emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+    emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <!-- ELENCO COMPLETO TELAI -->\n';
+    emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td style="overflow-x: auto;">\n';
+    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
+    emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse; min-width: 100%;">\n';
+    emailHTML += '          <thead>\n';
+    emailHTML += '            <tr style="background-color: #34495e;">\n';
+    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 50px;">#</th>\n';
+    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
+    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
+    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
+    emailHTML += '            </tr>\n';
+    emailHTML += '          </thead>\n';
+    emailHTML += '          <tbody>\n';
+    
+    sortedData.forEach(function(item, index) {
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
+        emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-wrap: break-word;">' + item.anomalia + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
+        emailHTML += '            </tr>\n';
+    });
+    
+    emailHTML += '          </tbody>\n';
+    emailHTML += '        </table>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '  <!-- FOOTER -->\n';
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #34495e; border-radius: 0 0 10px 10px; margin-top: 20px;">\n';
+    emailHTML += '    <tr>\n';
+    emailHTML += '      <td style="padding: 20px; text-align: center;">\n';
+    emailHTML += '        <p style="color: #ecf0f1; font-size: 13px; margin: 0;">🔧 Report generato automaticamente dal Sistema di Raccolta Dati Anomalie</p>\n';
+    emailHTML += '        <p style="color: #95a5a6; font-size: 11px; margin: 10px 0 0 0;">Documento generato il ' + day + '/' + month + '/' + year + ' alle ore ' + hours + ':' + minutes + '</p>\n';
+    emailHTML += '      </td>\n';
+    emailHTML += '    </tr>\n';
+    emailHTML += '  </table>\n\n';
+    
+    emailHTML += '</div>\n';
+    emailHTML += '</body></html>\n';
+    emailHTML += '<!-- FINE REPORT - COPIA FINO A QUI -->\n\n';
+    
+    emailHTML += '\n\n\n';
+    emailHTML += '<!--\n';
+    emailHTML += '╔═══════════════════════════════════════════════════════════════════════════╗\n';
+    emailHTML += '  🔧 COME INSERIRE QUESTO REPORT IN OUTLOOK WEB - GUIDA PASSO-PASSO\n';
+    emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n\n';
+    emailHTML += '✅ METODO 1 - MODALITÀ HTML (CONSIGLIATO)\n';
+    emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    emailHTML += '1. Apri questo file con NOTEPAD (Blocco Note) o qualsiasi editor di testo\n';
+    emailHTML += '2. Seleziona TUTTO il testo da "<!-- INIZIO REPORT" a "<!-- FINE REPORT"\n';
+    emailHTML += '3. Copia (Ctrl+C)\n';
+    emailHTML += '4. Vai su Outlook Web (https://outlook.office.com)\n';
+    emailHTML += '5. Clicca su "Nuova email"\n';
+    emailHTML += '6. Clicca sui 3 puntini (...) in basso nella finestra di composizione\n';
+    emailHTML += '7. Seleziona "Cambia visualizzazione" → "Visualizza HTML"\n';
+    emailHTML += '8. INCOLLA il codice copiato (Ctrl+V)\n';
+    emailHTML += '9. Clicca di nuovo sui 3 puntini (...)\n';
+    emailHTML += '10. Seleziona "Cambi visualizzazione" → "Predefinito"\n';
+    emailHTML += '11. ✨ Il report apparirà formattato perfettamente!\n\n';
+    emailHTML += '⚠️ NOTA: Se non vedi "Visualizza HTML", clicca su "Mostra da" per espandere.\n\n\n';
+    emailHTML += '✅ METODO 2 - COPIA E INCOLLA DIRETTO (PIÙ VELOCE MA MENO PRECISO)\n';
+    emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    emailHTML += '1. Apri il file "Report_Email_[data].html" nel BROWSER (Chrome/Edge)\n';
+    emailHTML += '2. Seleziona tutto il contenuto visibile (Ctrl+A)\n';
+    emailHTML += '3. Copia (Ctrl+C)\n';
+    emailHTML += '4. Vai su Outlook Web\n';
+    emailHTML += '5. Clicca "Nuova email"\n';
+    emailHTML += '6. Incolla direttamente nel corpo email (Ctrl+V)\n';
+    emailHTML += '7. ⚠️ Alcuni stili potrebbero non essere perfetti\n\n\n';
+    emailHTML += '✅ METODO 3 - ALLEGARE IL FILE (PIÙ SICURO)\n';
+    emailHTML += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    emailHTML += '1. In Outlook Web, clicca "Nuova email"\n';
+    emailHTML += '2. Scrivi il testo della email\n';
+    emailHTML += '3. Clicca l\'icona della graffetta 📎\n';
+    emailHTML += '4. Seleziona il file "Report_Email_[data].html"\n';
+    emailHTML += '5. Il destinatario può aprirlo con un doppio clic\n\n\n';
+    emailHTML += '💡 SUGGERIMENTI:\n';
+    emailHTML += '• Il METODO 1 garantisce la migliore compatibilità con Outlook\n';
+    emailHTML += '• Se hai problemi, usa il METODO 3 (allegato)\n';
+    emailHTML += '• Puoi testare inviando una email a te stesso prima!\n\n';
+    emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n';
+    emailHTML += '-->\n';
+    
+    // Download normale per tutti i dispositivi con encoding corretto
+    const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    // Alert unificato per tutti i dispositivi
+    alert('✅ REPORT EMAIL SCARICATO!\n\n📧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Il file è ottimizzato per mobile e desktop!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+}
 
         // ========== GESTIONE DATABASE ANOMALIE ==========
         function showManageAnomalies() {
