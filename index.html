@@ -699,8 +699,9 @@
             }
 
             const numeroTelaio = document.getElementById('telaio').value;
+            // Assicura che il nome anomalia sia sempre MAIUSCOLO anche in registrazione giornata
             const data = {
-                anomalia: selectedAnomalia.nome,
+                anomalia: selectedAnomalia.nome.toUpperCase(),
                 ute: selectedAnomalia.ute,
                 gravita: selectedAnomalia.gravita,
                 telaio: getCompleteTelaio(),
@@ -710,6 +711,15 @@
                 date: new Date().toLocaleDateString('it-IT'),
                 time: new Date().toLocaleTimeString('it-IT')
             };
+
+            // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
+            const isDuplicate = dataStorage.some(function(entry) {
+                return entry.telaio === data.telaio && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
+            });
+            if (isDuplicate) {
+                showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
+                return;
+            }
 
             lastTelaio = numeroTelaio;
             shouldClearOnNextInput = false;
@@ -1521,7 +1531,7 @@
         }
 
         function saveAnomalia() {
-            const nome = document.getElementById('newAnomaliaInput').value.trim();
+            const nome = document.getElementById('newAnomaliaInput').value.trim().toUpperCase();
             const ute = document.getElementById('uteSelect').value;
             const gravita = parseInt(document.getElementById('gravitaValue').value);
             const editingIndex = parseInt(document.getElementById('editingIndex').value);
@@ -1531,8 +1541,9 @@
                 return;
             }
 
+            // Controllo duplicati case-insensitive
             const isDuplicate = anomalieDB.some(function(a, idx) {
-                return a.nome === nome && idx !== editingIndex;
+                return a.nome && a.nome.toUpperCase() === nome && idx !== editingIndex;
             });
 
             if (isDuplicate) {
@@ -1599,7 +1610,11 @@
                     }
 
                     if (confirm('❓ CONFERMI L\'IMPORTAZIONE?\n\n📊 Anomalie attuali: ' + anomalieDB.length + '\n📥 Da importare: ' + importedData.anomalieDB.length + '\n\n⚠️ Sostituirà il database attuale!')) {
-                        anomalieDB = importedData.anomalieDB;
+                        // Conversione automatica dei nomi in maiuscolo
+                        anomalieDB = importedData.anomalieDB.map(a => ({
+                            ...a,
+                            nome: a.nome ? a.nome.toUpperCase() : a.nome
+                        }));
                         localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
                         populateAnomalieList();
                         updateManageContent();
