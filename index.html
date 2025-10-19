@@ -1101,10 +1101,13 @@
     emailHTML += '  td{padding:8px !important;font-size:12px !important;}\n';
     emailHTML += '  th{padding:8px !important;font-size:11px !important;}\n';
     emailHTML += '  .stats-box{padding:10px !important;}\n';
-    emailHTML += '  .bar-rank{display:block !important;text-align:left !important;margin-bottom:5px !important;}\n';
-    emailHTML += '  .bar-label{display:block !important;width:100% !important;margin-bottom:8px !important;}\n';
-    emailHTML += '  .bar-progress{display:block !important;width:100% !important;margin:5px 0 !important;}\n';
-    emailHTML += '  .bar-value{display:inline-block !important;width:auto !important;margin-right:15px !important;margin-top:5px !important;}\n';
+    emailHTML += '  .top5-table, .ute-table{display:block !important;width:100% !important;}\n';
+    emailHTML += '  .top5-table tr, .ute-table tr{display:flex !important;flex-direction:column !important;}\n';
+    emailHTML += '  .top5-table td, .ute-table td{display:block !important;width:100% !important;padding:8px 12px !important;}\n';
+    emailHTML += '  .bar-rank{text-align:left !important;}\n';
+    emailHTML += '  .bar-label{width:100% !important;}\n';
+    emailHTML += '  .bar-progress{width:100% !important;}\n';
+    emailHTML += '  .bar-value{display:inline-block !important;width:auto !important;margin-right:15px !important;}\n';
     emailHTML += '}\n';
     emailHTML += '</style>\n';
     
@@ -1162,7 +1165,7 @@
         const details = anomaliaDetails[anomalia];
         const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
         
-        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
+        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="top5-table" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
         emailHTML += '          <tr>\n';
         emailHTML += '            <td width="50" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-rank">\n';
         emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #e74c3c;">' + (index + 1) + '</span>\n';
@@ -1177,11 +1180,11 @@
         emailHTML += '              ' + textBar + '\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
-        emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">CASI</p>\n';
+        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</span> ';
+        emailHTML += '              <span style="font-size: 10px; color: #7f8c8d;">CASI</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</p>\n';
+        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '          </tr>\n';
         emailHTML += '        </table>\n';
@@ -1208,7 +1211,7 @@
         const percent = ((count / total) * 100).toFixed(1);
         const textBar = createTextBar(count, maxUteCount, 25, '#3498db');
         
-        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">\n';
+        emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="ute-table" style="margin-bottom: 12px;">\n';
         emailHTML += '          <tr>\n';
         emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;" class="bar-label">\n';
         emailHTML += '              <span style="background-color: #3498db; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
@@ -1217,11 +1220,11 @@
         emailHTML += '              ' + textBar + '\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</p>\n';
-        emailHTML += '              <p style="margin: 0; font-size: 10px; color: #7f8c8d;">KO</p>\n';
+        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</span> ';
+        emailHTML += '              <span style="font-size: 10px; color: #7f8c8d;">KO</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <p style="margin: 0; font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</p>\n';
+        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '          </tr>\n';
         emailHTML += '        </table>\n';
