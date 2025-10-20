@@ -502,6 +502,7 @@
         let telaioPrefixStorage = localStorage.getItem('telaioPrefix') || '';
         let currentGravitaFilter = 0;
         let currentUteFilter = '';
+		let isResultsCollapsed = false;
         
         const now = new Date();
         const today = now.getFullYear() + '-' + (now.getMonth()+1).toString().padStart(2,'0') + '-' + now.getDate().toString().padStart(2,'0');
@@ -598,7 +599,12 @@
         }
 
         // ========== RICERCA ANOMALIE ==========
-        function searchAnomalies() {
+		function searchAnomalies() {
+			// Se l'elenco era stato collassato dopo una selezione, riaprirlo quando l'utente riprende a digitare
+			if (isResultsCollapsed) {
+				document.getElementById('resultsList').style.display = 'block';
+				isResultsCollapsed = false;
+			}
             const query = document.getElementById('searchInput').value.toLowerCase();
             const resultsList = document.getElementById('resultsList');
             
@@ -664,6 +670,20 @@
 
             if (lastTelaio) document.getElementById('telaio').value = lastTelaio;
             updateSubmitButton();
+
+			// Collassa l'elenco risultati per evitare scroll e clic accidentali
+			const resultsList = document.getElementById('resultsList');
+			if (resultsList) {
+				resultsList.style.display = 'none';
+				isResultsCollapsed = true;
+			}
+
+			// Porta il focus direttamente sul campo telaio e centralo a schermo
+			const telaioInput = document.getElementById('telaio');
+			if (telaioInput) {
+				telaioInput.focus();
+				telaioInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			}
         }
 
         // ========== GESTIONE INPUT TELAIO ==========
@@ -783,7 +803,9 @@
         function resetForm() {
             // Reset veloce per produzione
             document.getElementById('searchInput').value = '';
-            document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">Digita una parola chiave per cercare le anomalie</div>';
+			document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">Digita una parola chiave per cercare le anomalie</div>';
+			document.getElementById('resultsList').style.display = 'block';
+			isResultsCollapsed = false;
             // Non cancellare il messaggio di successo se è ancora visibile
             document.getElementById('selectedAnomalyDisplay').style.display = 'none';
             selectedAnomalia = null;
