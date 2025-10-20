@@ -793,6 +793,65 @@
             document.getElementById('searchInput').focus();
         }
 
+        // ========== DOWNLOAD UTIL ==========
+        async function downloadBlobCrossPlatform(blob, filename, mimeType) {
+            try {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+                // Try Web Share Level 2 (iOS/iPadOS supports navigator.share; files support varies by version)
+                try {
+                    const file = new File([blob], filename, { type: mimeType || blob.type || 'application/octet-stream' });
+                    if (navigator.share) {
+                        if (!navigator.canShare) {
+                            // Some Android browsers support share with files but don't expose canShare
+                            try {
+                                await navigator.share({ files: [file], title: filename, text: filename });
+                                return 'shared';
+                            } catch (_) {
+                                // fall through
+                            }
+                        } else if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: filename, text: filename });
+                            return 'shared';
+                        }
+                    }
+                } catch (e) {
+                    // Ignore and fallback below
+                }
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+
+                // iOS Safari historically ignores download attribute. Open in new tab as fallback.
+                if (isIOS && isSafari && !("download" in HTMLAnchorElement.prototype)) {
+                    window.open(url, '_blank');
+                    setTimeout(function() { window.URL.revokeObjectURL(url); }, 1500);
+                    return 'opened';
+                } else {
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+
+                // Revoke after a short delay to allow Safari to consume the blob
+                setTimeout(function() { window.URL.revokeObjectURL(url); }, 1500);
+                return 'downloaded';
+            } catch (err) {
+                try {
+                    // Last-chance fallback
+                    const url = window.URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                    setTimeout(function() { window.URL.revokeObjectURL(url); }, 2000);
+                    return 'opened';
+                } catch (_) {
+                    return 'failed';
+                }
+            }
+        }
+
         // ========== REPORT FUNCTIONS ==========
         function showReport() {
             currentGravitaFilter = 0;
@@ -1032,7 +1091,7 @@
             newWindow.document.title = 'Dettaglio_' + anomaliaName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today;
         }
 
-        function downloadCompleteReport() {
+        async function downloadCompleteReport() {
     if (dataStorage.length === 0) {
         alert('❌ Nessun dato disponibile per il download');
         return;
@@ -1337,19 +1396,20 @@
     emailHTML += '╚═══════════════════════════════════════════════════════════════════════════╝\n';
     emailHTML += '-->\n';
     
-    // Download normale per tutti i dispositivi con encoding corretto
+    // Download/Share con fallback per iOS/Safari
     const blob = new Blob([emailHTML], { type: 'text/html;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const fileName = 'Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html';
+    const result = await downloadBlobCrossPlatform(blob, fileName, 'text/html;charset=utf-8');
     
-    // Alert unificato per tutti i dispositivi
-    alert('✅ REPORT EMAIL SCARICATO!\n\n📧 Report_Email_' + day + '-' + month + '-' + year + '_' + hours + '-' + minutes + '.html\n\n💡 Il file è ottimizzato per mobile e desktop!\n\n📋 3 METODI DISPONIBILI:\n1️⃣ Modalità HTML (migliore)\n2️⃣ Copia/Incolla browser\n3️⃣ Allega file');
+    if (result === 'shared') {
+        alert('📤 Condivisione avviata: scegli WhatsApp, Teams, Email o File.');
+    } else if (result === 'opened') {
+        alert('📄 File aperto: usa Condividi → Salva/Invia per completare.');
+    } else if (result === 'downloaded') {
+        alert('✅ File scaricato: ' + fileName);
+    } else {
+        alert('❌ Impossibile avviare il download/condivisione. Riprova o aggiorna Safari.');
+    }
 }
 
         // ========== GESTIONE DATABASE ANOMALIE ==========
@@ -1576,7 +1636,7 @@
             }
         }
 
-        function exportDatabase() {
+        async function exportDatabase() {
             const dbData = {
                 anomalieDB: anomalieDB,
                 exportDate: new Date().toISOString(),
@@ -1585,15 +1645,17 @@
             };
 
             const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'database_anomalie_backup_' + today + '.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            alert('✅ DATABASE ESPORTATO!\n\n📄 ' + anomalieDB.length + ' anomalie salvate');
+            const fname = 'database_anomalie_backup_' + today + '.json';
+            const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
+            if (result === 'shared') {
+                alert('📤 Condivisione avviata del database.');
+            } else if (result === 'opened') {
+                alert('📄 Database aperto: usa Condividi → Salva/Invia.');
+            } else if (result === 'downloaded') {
+                alert('✅ DATABASE ESPORTATO!\n\n📄 ' + anomalieDB.length + ' anomalie salvate');
+            } else {
+                alert('❌ Impossibile esportare il database. Riprova.');
+            }
         }
 
         function importDatabase(event) {
