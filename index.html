@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Raccolta Dati Anomalie</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -164,15 +164,17 @@
             letter-spacing: 2px;
         }
         .telaio-input {
-            width: 100%;
-            padding: 25px;
-            font-size: 32px;
+            width: 200px;
+            padding: 12px;
+            font-size: 24px;
             text-align: center;
-            border: 3px solid #bdc3c7;
-            border-radius: 10px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
             letter-spacing: 5px;
             font-weight: bold;
-            min-height: 90px;
+            min-height: 60px;
+            background: white;
+            color: #000000;
         }
         .telaio-input:focus {
             outline: none;
@@ -409,10 +411,11 @@
                 font-size: 14px; 
             }
             .telaio-input {
-                font-size: 24px;
-                padding: 20px;
-                min-height: 70px;
+                font-size: 20px;
+                padding: 12px;
+                min-height: 60px;
                 letter-spacing: 3px;
+                width: 180px;
             }
             .btn-clear, .btn-submit {
                 font-size: 14px;
@@ -444,9 +447,10 @@
                 min-height: 50px;
             }
             .telaio-input {
-                font-size: 20px;
-                padding: 15px;
+                font-size: 18px;
+                padding: 12px;
                 min-height: 60px;
+                width: 160px;
             }
             .btn-clear, .btn-submit {
                 font-size: 12px;
@@ -536,31 +540,30 @@
                 
                 <div style="margin-bottom: 30px;">
                     <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 10px;">
-                        <label for="telaioPrefixInput" style="font-size: 24px; font-weight: bold; color: #7f8c8d;">Prefisso:</label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
                         <input type="text" 
                                id="telaioPrefixInput" 
-                               placeholder="??" 
+                               placeholder="AA" 
                                maxlength="2" 
                                onkeyup="saveTelaioPrefixAndUpdate()" 
                                onchange="saveTelaioPrefixAndUpdate()" 
-                               style="width: 80px; padding: 12px; font-size: 28px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;"
+                               oninput="cleanPrefixInput()"
+                               style="width: 80px; padding: 12px; font-size: 24px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #000000; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;"
                                aria-label="Prefisso telaio (2 caratteri)"
                                aria-describedby="prefixHelp">
                         <span style="font-size: 32px; font-weight: bold; color: #2c3e50;">-</span>
-                        <span style="font-size: 24px; color: #7f8c8d;">(5 cifre)</span>
+                        <input type="text" 
+                               class="telaio-input" 
+                               id="telaio" 
+                               placeholder="00000" 
+                               maxlength="5" 
+                               inputmode="numeric" 
+                               pattern="[0-9]*"
+                               style="width: 200px; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #000000; font-weight: bold; min-height: 60px; letter-spacing: 5px;"
+                               aria-label="Numero telaio (5 cifre)"
+                               aria-describedby="telaioHelp">
                     </div>
                     <div id="prefixHelp" class="sr-only">Inserisci 2 caratteri per il prefisso del telaio</div>
-                    <label for="telaio" class="sr-only">Numero telaio (5 cifre)</label>
-                    <input type="text" 
-                           class="telaio-input" 
-                           id="telaio" 
-                           placeholder="00000" 
-                           maxlength="5" 
-                           inputmode="numeric" 
-                           pattern="[0-9]*"
-                           aria-label="Numero telaio (5 cifre)"
-                           aria-describedby="telaioHelp">
                     <div id="telaioHelp" class="sr-only">Inserisci 5 cifre per il numero del telaio</div>
                 </div>
                 <div class="action-buttons">
@@ -622,7 +625,7 @@
         let selectedAnomalia = null;
         let lastTelaio = '';
         let shouldClearOnNextInput = false;
-        let telaioPrefixStorage = localStorage.getItem('telaioPrefix') || '';
+        let telaioPrefixStorage = (localStorage.getItem('telaioPrefix') || '').replace(/[^A-Za-z]/g, '').toUpperCase();
         let currentGravitaFilter = 0;
         let currentUteFilter = '';
 		let isResultsCollapsed = false;
@@ -818,15 +821,26 @@
         }, 30000);
 
         // ========== GESTIONE PREFISSO TELAIO ==========
+        function cleanPrefixInput() {
+            const input = document.getElementById('telaioPrefixInput');
+            const cleanValue = input.value.replace(/[^A-Za-z]/g, '').toUpperCase();
+            if (input.value !== cleanValue) {
+                input.value = cleanValue;
+            }
+        }
+        
         function saveTelaioPrefixAndUpdate() {
-            telaioPrefixStorage = document.getElementById('telaioPrefixInput').value.toUpperCase();
-            localStorage.setItem('telaioPrefix', telaioPrefixStorage);
+            const inputValue = document.getElementById('telaioPrefixInput').value;
+            // Pulisce il valore da caratteri strani e mantiene solo lettere
+            const cleanValue = inputValue.replace(/[^A-Za-z]/g, '').toUpperCase();
+            telaioPrefixStorage = cleanValue;
+            document.getElementById('telaioPrefixInput').value = cleanValue;
+            localStorage.setItem('telaioPrefix', cleanValue);
         }
 
         // ========== SISTEMA DI INDICIZZAZIONE PER RICERCA VELOCE ==========
         function buildSearchIndex() {
-            if (isIndexBuilt) return;
-            
+            // Ricostruisci sempre l'indice per garantire che sia aggiornato
             searchIndex.clear();
             anomalieDB.forEach((item, index) => {
                 const words = (item.nome + ' ' + item.ute).toLowerCase().split(/\s+/);
@@ -870,7 +884,7 @@
                 return;
             }
 
-            // Costruisci indice se necessario
+            // Costruisci indice se necessario - sempre aggiornato
             buildSearchIndex();
             
             // Ricerca ottimizzata con indice
@@ -893,6 +907,16 @@
                     }
                 }
             });
+            
+            // Fallback: se l'indice non trova risultati, cerca direttamente nel database
+            if (matchingIndices.size === 0) {
+                anomalieDB.forEach((item, index) => {
+                    const searchText = (item.nome + ' ' + item.ute).toLowerCase();
+                    if (searchText.includes(query.toLowerCase())) {
+                        matchingIndices.add(index);
+                    }
+                });
+            }
 
             const filtered = Array.from(matchingIndices).map(index => anomalieDB[index]);
 
@@ -2093,7 +2117,12 @@
             try {
                 // Inizializza storage con gestione errori
                 if (telaioPrefixStorage) {
-                    document.getElementById('telaioPrefixInput').value = telaioPrefixStorage;
+                    // Pulisce il valore prima di impostarlo
+                    const cleanPrefix = telaioPrefixStorage.replace(/[^A-Za-z]/g, '').toUpperCase();
+                    document.getElementById('telaioPrefixInput').value = cleanPrefix;
+                    telaioPrefixStorage = cleanPrefix;
+                    // Aggiorna anche il localStorage con il valore pulito
+                    localStorage.setItem('telaioPrefix', cleanPrefix);
                 }
                 
                 // Costruisci indice di ricerca per performance
