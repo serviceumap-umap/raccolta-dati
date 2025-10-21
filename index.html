@@ -982,84 +982,55 @@
             }
         }
 
-        // ========== SUBMIT DATI CON VALIDAZIONE ROBUSTA ==========
+        // ========== SUBMIT DATI ==========
         function submitData() {
-            try {
-                // Validazione input
-                if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
-                    showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
-                    return;
-                }
+            if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
+                showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
+                return;
+            }
 
-                if (!telaioPrefixStorage || telaioPrefixStorage.length !== 2) {
-                    showMessage('❌ Inserisci un prefisso telaio valido (2 caratteri)', 'error');
-                    return;
-                }
+            if (!telaioPrefixStorage) {
+                showMessage('❌ Inserisci il prefisso del telaio nel campo in alto', 'error');
+                return;
+            }
 
                 const numeroTelaio = document.getElementById('telaio').value;
-                const telaioCompleto = getCompleteTelaio();
-                
-                // Validazione formato telaio
-                if (!SecurityManager.validateTelaio(telaioCompleto)) {
-                    showMessage('❌ Formato telaio non valido. Usa: XX-00000', 'error');
-                    return;
-                }
-                
-                // Validazione nome anomalia
-                if (!SecurityManager.validateAnomaliaName(selectedAnomalia.nome)) {
-                    showMessage('❌ Nome anomalia non valido', 'error');
-                    return;
-                }
+            // Assicura che il nome anomalia sia sempre MAIUSCOLO anche in registrazione giornata
+            const data = {
+                anomalia: selectedAnomalia.nome.toUpperCase(),
+                ute: selectedAnomalia.ute,
+                gravita: selectedAnomalia.gravita,
+                telaio: getCompleteTelaio(),
+                telaiioNumerico: numeroTelaio,
+                turno: getTurnoCorrente(),
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('it-IT'),
+                time: new Date().toLocaleTimeString('it-IT')
+            };
 
-                // Sanitizzazione dati
-                const data = {
-                    anomalia: SecurityManager.sanitizeInput(selectedAnomalia.nome.toUpperCase()),
-                    ute: SecurityManager.sanitizeInput(selectedAnomalia.ute),
-                    gravita: parseInt(selectedAnomalia.gravita) || 2,
-                    telaio: SecurityManager.sanitizeInput(telaioCompleto),
-                    telaiioNumerico: SecurityManager.sanitizeInput(numeroTelaio),
-                    turno: getTurnoCorrente(),
-                    timestamp: new Date().toISOString(),
-                    date: new Date().toLocaleDateString('it-IT'),
-                    time: new Date().toLocaleTimeString('it-IT')
-                };
-
-                // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
-                const isDuplicate = dataStorage.some(function(entry) {
-                    return entry.telaio === data.telaio && 
-                           entry.anomalia && 
-                           entry.anomalia.toUpperCase() === data.anomalia;
-                });
-                
-                if (isDuplicate) {
-                    showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
-                    return;
-                }
-
-                // Salvataggio con gestione errori
-                lastTelaio = numeroTelaio;
-                shouldClearOnNextInput = false;
-                dataStorage.push(data);
-                
-                if (!StorageManager.setItem(storageKey, dataStorage)) {
-                    showMessage('❌ Errore nel salvataggio. Riprova.', 'error');
-                    return;
-                }
-                
-                updateLastEntry(data);
-                
-                // Mostra messaggio di successo
-                showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
-                
-                // Reset form dopo un breve delay per mostrare il messaggio
-                setTimeout(function() { 
-                    resetForm(); 
-                }, 800);
-                
-            } catch (error) {
-                console.error('Errore in submitData:', error);
-                showMessage('❌ Errore imprevisto. Contatta l\'amministratore.', 'error');
+            // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
+            const isDuplicate = dataStorage.some(function(entry) {
+                return entry.telaio === data.telaio && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
+            });
+            if (isDuplicate) {
+                showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
+                return;
             }
+
+            lastTelaio = numeroTelaio;
+            shouldClearOnNextInput = false;
+            dataStorage.push(data);
+            localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+            
+            updateLastEntry(data);
+            
+            // Mostra messaggio di successo
+            showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
+            
+            // Reset form dopo un breve delay per mostrare il messaggio
+            setTimeout(function() { 
+                resetForm(); 
+            }, 800); // Delay ridotto per velocità ma sufficiente per vedere il messaggio
         }
 
         function updateLastEntry(data) {
