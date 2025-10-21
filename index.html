@@ -326,11 +326,29 @@
             align-items: center;
         }
         
-        /* MEDIA QUERIES PER MOBILE */
+        /* MEDIA QUERIES PER MOBILE E TABLET */
         @media (max-width: 1300px) {
             .main-content { 
                 grid-template-columns: 1fr; 
                 gap: 20px; 
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .header-left {
+                width: 100%;
+                justify-content: center;
+            }
+            .header-buttons {
+                width: 100%;
+                justify-content: center;
             }
         }
         
@@ -406,6 +424,70 @@
                 margin: 10% auto;
             }
         }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+            .header {
+                padding: 8px 10px;
+            }
+            .header h1 {
+                font-size: 16px;
+            }
+            .panel {
+                padding: 15px;
+            }
+            .search-input {
+                padding: 12px;
+                font-size: 14px;
+                min-height: 50px;
+            }
+            .telaio-input {
+                font-size: 20px;
+                padding: 15px;
+                min-height: 60px;
+            }
+            .btn-clear, .btn-submit {
+                font-size: 12px;
+                padding: 10px;
+            }
+            .modal-content {
+                width: 98%;
+                padding: 15px;
+                margin: 5% auto;
+            }
+        }
+        
+        /* MIGLIORAMENTI ACCESSIBILITÀ */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* FOCUS VISIBILE PER ACCESSIBILITÀ */
+        .search-input:focus,
+        .telaio-input:focus,
+        .prefix-input:focus {
+            outline: 3px solid #3498db;
+            outline-offset: 2px;
+        }
+        
+        /* MIGLIORAMENTI PER SCREEN READER */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
 </head>
 <body>
@@ -422,8 +504,22 @@
         <div class="main-content">
             <div class="panel">
                 <div class="section-title">🔍 CERCA ANOMALIA</div>
-                <input type="text" class="search-input" id="searchInput" placeholder="Digita parola chiave..." onkeyup="searchAnomalies()" onfocus="triggerTouchKeyboard(this)" autocomplete="off" inputmode="text">
-                <div class="results-list" id="resultsList">
+                <label for="searchInput" class="sr-only">Cerca anomalia per nome o UTE</label>
+                <input type="text" 
+                       class="search-input" 
+                       id="searchInput" 
+                       placeholder="Digita parola chiave..." 
+                       onkeyup="searchAnomalies()" 
+                       onfocus="triggerTouchKeyboard(this)" 
+                       autocomplete="off" 
+                       inputmode="text"
+                       aria-label="Campo di ricerca anomalie"
+                       aria-describedby="searchHelp">
+                <div id="searchHelp" class="sr-only">Digita almeno 2 caratteri per iniziare la ricerca</div>
+                <div class="results-list" 
+                     id="resultsList" 
+                     role="listbox" 
+                     aria-label="Risultati ricerca anomalie">
                     <div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 18px;">
                         Digita una parola chiave per cercare le anomalie
                     </div>
@@ -441,16 +537,43 @@
                 <div style="margin-bottom: 30px;">
                     <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 10px;">
-                        <span style="font-size: 24px; font-weight: bold; color: #7f8c8d;">Prefisso:</span>
-                        <input type="text" id="telaioPrefixInput" placeholder="??" maxlength="2" onkeyup="saveTelaioPrefixAndUpdate()" onchange="saveTelaioPrefixAndUpdate()" style="width: 80px; padding: 12px; font-size: 28px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;">
+                        <label for="telaioPrefixInput" style="font-size: 24px; font-weight: bold; color: #7f8c8d;">Prefisso:</label>
+                        <input type="text" 
+                               id="telaioPrefixInput" 
+                               placeholder="??" 
+                               maxlength="2" 
+                               onkeyup="saveTelaioPrefixAndUpdate()" 
+                               onchange="saveTelaioPrefixAndUpdate()" 
+                               style="width: 80px; padding: 12px; font-size: 28px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #3498db; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;"
+                               aria-label="Prefisso telaio (2 caratteri)"
+                               aria-describedby="prefixHelp">
                         <span style="font-size: 32px; font-weight: bold; color: #2c3e50;">-</span>
                         <span style="font-size: 24px; color: #7f8c8d;">(5 cifre)</span>
                     </div>
-                    <input type="text" class="telaio-input" id="telaio" placeholder="00000" maxlength="5" inputmode="numeric" pattern="[0-9]*">
+                    <div id="prefixHelp" class="sr-only">Inserisci 2 caratteri per il prefisso del telaio</div>
+                    <label for="telaio" class="sr-only">Numero telaio (5 cifre)</label>
+                    <input type="text" 
+                           class="telaio-input" 
+                           id="telaio" 
+                           placeholder="00000" 
+                           maxlength="5" 
+                           inputmode="numeric" 
+                           pattern="[0-9]*"
+                           aria-label="Numero telaio (5 cifre)"
+                           aria-describedby="telaioHelp">
+                    <div id="telaioHelp" class="sr-only">Inserisci 5 cifre per il numero del telaio</div>
                 </div>
                 <div class="action-buttons">
-                    <button class="btn-clear" onclick="clearTelaio()">🗑️ CANCELLA</button>
-                    <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled>✅ INVIA</button>
+                    <button class="btn-clear" 
+                            onclick="clearTelaio()"
+                            aria-label="Cancella numero telaio"
+                            type="button">🗑️ CANCELLA</button>
+                    <button class="btn-submit" 
+                            id="submitBtn" 
+                            onclick="submitData()" 
+                            disabled
+                            aria-label="Invia dati anomalia"
+                            type="button">✅ INVIA</button>
                 </div>
                 <div id="statusMessage"></div>
                 <div id="lastEntry" style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #17a2b8; display: none;">
@@ -503,6 +626,104 @@
         let currentGravitaFilter = 0;
         let currentUteFilter = '';
 		let isResultsCollapsed = false;
+        
+        // ========== SISTEMA DI INDICIZZAZIONE PER RICERCA VELOCE ==========
+        let searchIndex = new Map();
+        let isIndexBuilt = false;
+        
+        // ========== GESTIONE ERRORI E STORAGE ROBUSTA ==========
+        class StorageManager {
+            static setItem(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error('Storage error:', e);
+                    // Cleanup automatico se storage pieno
+                    this.cleanupOldData();
+                    try {
+                        localStorage.setItem(key, JSON.stringify(value));
+                        return true;
+                    } catch (e2) {
+                        console.error('Storage still full after cleanup:', e2);
+                        this.showStorageError();
+                        return false;
+                    }
+                }
+            }
+            
+            static getItem(key, defaultValue = null) {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch (e) {
+                    console.error('Storage read error:', e);
+                    return defaultValue;
+                }
+            }
+            
+            static cleanupOldData() {
+                const threshold = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000)); // 30 giorni
+                const keysToDelete = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('anomalieData_')) {
+                        const dateStr = key.replace('anomalieData_', '');
+                        if (new Date(dateStr) < threshold) {
+                            keysToDelete.push(key);
+                        }
+                    }
+                }
+                
+                keysToDelete.forEach(key => localStorage.removeItem(key));
+                console.log('Auto-cleanup: ' + keysToDelete.length + ' sessioni eliminate');
+            }
+            
+            static showStorageError() {
+                showMessage('⚠️ Spazio di archiviazione pieno! Elimina dati vecchi o contatta l\'amministratore.', 'error');
+            }
+        }
+        
+        // ========== SISTEMA DI SANITIZZAZIONE E VALIDAZIONE ==========
+        class SecurityManager {
+            static sanitizeInput(input) {
+                if (typeof input !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = input;
+                return div.innerHTML;
+            }
+            
+            static validateTelaio(telaio) {
+                return /^[A-Z]{2}-\d{5}$/.test(telaio);
+            }
+            
+            static validateAnomaliaName(name) {
+                return name && name.trim().length > 0 && name.length <= 200;
+            }
+            
+            static escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        }
+        
+        // ========== SISTEMA DI DEBOUNCING PER PERFORMANCE ==========
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
         
         const now = new Date();
         const today = now.getFullYear() + '-' + (now.getMonth()+1).toString().padStart(2,'0') + '-' + now.getDate().toString().padStart(2,'0');
@@ -586,10 +807,14 @@
         }
 
         setInterval(function() {
-            localStorage.setItem(storageKey, JSON.stringify(dataStorage));
-            localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
-            localStorage.setItem('telaioPrefix', telaioPrefixStorage);
-            cleanOldData();
+            try {
+                StorageManager.setItem(storageKey, dataStorage);
+                StorageManager.setItem('anomalieDB', anomalieDB);
+                StorageManager.setItem('telaioPrefix', telaioPrefixStorage);
+                StorageManager.cleanupOldData();
+            } catch (error) {
+                console.error('Errore in auto-salvataggio:', error);
+            }
         }, 30000);
 
         // ========== GESTIONE PREFISSO TELAIO ==========
@@ -598,14 +823,46 @@
             localStorage.setItem('telaioPrefix', telaioPrefixStorage);
         }
 
-        // ========== RICERCA ANOMALIE ==========
+        // ========== SISTEMA DI INDICIZZAZIONE PER RICERCA VELOCE ==========
+        function buildSearchIndex() {
+            if (isIndexBuilt) return;
+            
+            searchIndex.clear();
+            anomalieDB.forEach((item, index) => {
+                const words = (item.nome + ' ' + item.ute).toLowerCase().split(/\s+/);
+                words.forEach(word => {
+                    if (word.length >= 2) {
+                        if (!searchIndex.has(word)) {
+                            searchIndex.set(word, []);
+                        }
+                        searchIndex.get(word).push(index);
+                    }
+                });
+            });
+            isIndexBuilt = true;
+        }
+        
+        function rebuildSearchIndex() {
+            isIndexBuilt = false;
+            buildSearchIndex();
+        }
+        
+        // ========== RICERCA ANOMALIE OTTIMIZZATA ==========
+        const debouncedSearch = debounce(function() {
+            performSearch();
+        }, 150);
+        
 		function searchAnomalies() {
 			// Se l'elenco era stato collassato dopo una selezione, riaprirlo quando l'utente riprende a digitare
 			if (isResultsCollapsed) {
 				document.getElementById('resultsList').style.display = 'block';
 				isResultsCollapsed = false;
 			}
-            const query = document.getElementById('searchInput').value.toLowerCase();
+            debouncedSearch();
+        }
+        
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const resultsList = document.getElementById('resultsList');
             
             if (query.length < 2) {
@@ -613,29 +870,48 @@
                 return;
             }
 
-            // Ottimizzazione: usa for loop invece di filter per velocità
-            const filtered = [];
-            for (let i = 0; i < anomalieDB.length; i++) {
-                const a = anomalieDB[i];
-                if (a.nome.toLowerCase().includes(query) || a.ute.toLowerCase().includes(query)) {
-                    filtered.push(a);
+            // Costruisci indice se necessario
+            buildSearchIndex();
+            
+            // Ricerca ottimizzata con indice
+            const queryWords = query.split(/\s+/);
+            const matchingIndices = new Set();
+            
+            queryWords.forEach(word => {
+                if (word.length >= 2) {
+                    // Ricerca esatta
+                    if (searchIndex.has(word)) {
+                        searchIndex.get(word).forEach(index => matchingIndices.add(index));
+                    }
+                    // Ricerca parziale per parole più lunghe
+                    if (word.length >= 3) {
+                        for (const [indexedWord, indices] of searchIndex.entries()) {
+                            if (indexedWord.includes(word)) {
+                                indices.forEach(index => matchingIndices.add(index));
+                            }
+                        }
+                    }
                 }
-            }
+            });
+
+            const filtered = Array.from(matchingIndices).map(index => anomalieDB[index]);
 
             if (filtered.length === 0) {
                 resultsList.innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;">Nessuna anomalia trovata</div>';
                 return;
             }
 
-            // Ottimizzazione: usa template literal per velocità
+            // Rendering ottimizzato con sanitizzazione
             let html = '';
             for (let i = 0; i < filtered.length; i++) {
                 const a = filtered[i];
+                const safeNome = SecurityManager.escapeHtml(a.nome);
+                const safeUte = SecurityManager.escapeHtml(a.ute);
                 html += `<div class="result-item" onclick="selectAnomalia('${a.nome.replace(/'/g, "\\'")}')">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>${a.nome}</span>
+                        <span>${safeNome}</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <span style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${a.ute}</span>
+                            <span style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${safeUte}</span>
                         </div>
                     </div>
                 </div>`;
@@ -706,55 +982,84 @@
             }
         }
 
-        // ========== SUBMIT DATI ==========
+        // ========== SUBMIT DATI CON VALIDAZIONE ROBUSTA ==========
         function submitData() {
-            if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
-                showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
-                return;
+            try {
+                // Validazione input
+                if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
+                    showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
+                    return;
+                }
+
+                if (!telaioPrefixStorage || telaioPrefixStorage.length !== 2) {
+                    showMessage('❌ Inserisci un prefisso telaio valido (2 caratteri)', 'error');
+                    return;
+                }
+
+                const numeroTelaio = document.getElementById('telaio').value;
+                const telaioCompleto = getCompleteTelaio();
+                
+                // Validazione formato telaio
+                if (!SecurityManager.validateTelaio(telaioCompleto)) {
+                    showMessage('❌ Formato telaio non valido. Usa: XX-00000', 'error');
+                    return;
+                }
+                
+                // Validazione nome anomalia
+                if (!SecurityManager.validateAnomaliaName(selectedAnomalia.nome)) {
+                    showMessage('❌ Nome anomalia non valido', 'error');
+                    return;
+                }
+
+                // Sanitizzazione dati
+                const data = {
+                    anomalia: SecurityManager.sanitizeInput(selectedAnomalia.nome.toUpperCase()),
+                    ute: SecurityManager.sanitizeInput(selectedAnomalia.ute),
+                    gravita: parseInt(selectedAnomalia.gravita) || 2,
+                    telaio: SecurityManager.sanitizeInput(telaioCompleto),
+                    telaiioNumerico: SecurityManager.sanitizeInput(numeroTelaio),
+                    turno: getTurnoCorrente(),
+                    timestamp: new Date().toISOString(),
+                    date: new Date().toLocaleDateString('it-IT'),
+                    time: new Date().toLocaleTimeString('it-IT')
+                };
+
+                // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
+                const isDuplicate = dataStorage.some(function(entry) {
+                    return entry.telaio === data.telaio && 
+                           entry.anomalia && 
+                           entry.anomalia.toUpperCase() === data.anomalia;
+                });
+                
+                if (isDuplicate) {
+                    showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
+                    return;
+                }
+
+                // Salvataggio con gestione errori
+                lastTelaio = numeroTelaio;
+                shouldClearOnNextInput = false;
+                dataStorage.push(data);
+                
+                if (!StorageManager.setItem(storageKey, dataStorage)) {
+                    showMessage('❌ Errore nel salvataggio. Riprova.', 'error');
+                    return;
+                }
+                
+                updateLastEntry(data);
+                
+                // Mostra messaggio di successo
+                showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
+                
+                // Reset form dopo un breve delay per mostrare il messaggio
+                setTimeout(function() { 
+                    resetForm(); 
+                }, 800);
+                
+            } catch (error) {
+                console.error('Errore in submitData:', error);
+                showMessage('❌ Errore imprevisto. Contatta l\'amministratore.', 'error');
             }
-
-            if (!telaioPrefixStorage) {
-                showMessage('❌ Inserisci il prefisso del telaio nel campo in alto', 'error');
-                return;
-            }
-
-            const numeroTelaio = document.getElementById('telaio').value;
-            // Assicura che il nome anomalia sia sempre MAIUSCOLO anche in registrazione giornata
-            const data = {
-                anomalia: selectedAnomalia.nome.toUpperCase(),
-                ute: selectedAnomalia.ute,
-                gravita: selectedAnomalia.gravita,
-                telaio: getCompleteTelaio(),
-                telaiioNumerico: numeroTelaio,
-                turno: getTurnoCorrente(),
-                timestamp: new Date().toISOString(),
-                date: new Date().toLocaleDateString('it-IT'),
-                time: new Date().toLocaleTimeString('it-IT')
-            };
-
-            // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
-            const isDuplicate = dataStorage.some(function(entry) {
-                return entry.telaio === data.telaio && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
-            });
-            if (isDuplicate) {
-                showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
-                return;
-            }
-
-            lastTelaio = numeroTelaio;
-            shouldClearOnNextInput = false;
-            dataStorage.push(data);
-            localStorage.setItem(storageKey, JSON.stringify(dataStorage));
-            
-            updateLastEntry(data);
-            
-            // Mostra messaggio di successo
-            showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
-            
-            // Reset form dopo un breve delay per mostrare il messaggio
-            setTimeout(function() { 
-                resetForm(); 
-            }, 800); // Delay ridotto per velocità ma sufficiente per vedere il messaggio
         }
 
         function updateLastEntry(data) {
@@ -1613,48 +1918,83 @@
         }
 
         function saveAnomalia() {
-            const nome = document.getElementById('newAnomaliaInput').value.trim().toUpperCase();
-            const ute = document.getElementById('uteSelect').value;
-            const gravita = parseInt(document.getElementById('gravitaValue').value);
-            const editingIndex = parseInt(document.getElementById('editingIndex').value);
+            try {
+                const nome = document.getElementById('newAnomaliaInput').value.trim();
+                const ute = document.getElementById('uteSelect').value;
+                const gravita = parseInt(document.getElementById('gravitaValue').value);
+                const editingIndex = parseInt(document.getElementById('editingIndex').value);
 
-            if (!nome) {
-                alert('⚠️ Inserisci una descrizione per l\'anomalia');
-                return;
+                // Validazione input
+                if (!SecurityManager.validateAnomaliaName(nome)) {
+                    alert('⚠️ Nome anomalia non valido. Massimo 200 caratteri.');
+                    return;
+                }
+
+                const nomeUpper = nome.toUpperCase();
+                const uteSanitized = SecurityManager.sanitizeInput(ute);
+
+                // Controllo duplicati case-insensitive
+                const isDuplicate = anomalieDB.some(function(a, idx) {
+                    return a.nome && a.nome.toUpperCase() === nomeUpper && idx !== editingIndex;
+                });
+
+                if (isDuplicate) {
+                    alert('⚠️ Questa anomalia esiste già nel database');
+                    return;
+                }
+
+                const anomaliaObj = { 
+                    nome: SecurityManager.sanitizeInput(nomeUpper), 
+                    ute: uteSanitized, 
+                    gravita: gravita 
+                };
+
+                if (editingIndex >= 0) {
+                    anomalieDB[editingIndex] = anomaliaObj;
+                    alert('✅ Anomalia modificata con successo!');
+                } else {
+                    anomalieDB.push(anomaliaObj);
+                }
+
+                // Salvataggio con gestione errori
+                if (!StorageManager.setItem('anomalieDB', anomalieDB)) {
+                    alert('❌ Errore nel salvataggio del database');
+                    return;
+                }
+                
+                // Ricostruisci indice di ricerca
+                rebuildSearchIndex();
+                
+                populateAnomalieList();
+                updateManageContent();
+                cancelEdit();
+                
+            } catch (error) {
+                console.error('Errore in saveAnomalia:', error);
+                alert('❌ Errore imprevisto nel salvataggio');
             }
-
-            // Controllo duplicati case-insensitive
-            const isDuplicate = anomalieDB.some(function(a, idx) {
-                return a.nome && a.nome.toUpperCase() === nome && idx !== editingIndex;
-            });
-
-            if (isDuplicate) {
-                alert('⚠️ Questa anomalia esiste già nel database');
-                return;
-            }
-
-            const anomaliaObj = { nome: nome, ute: ute, gravita: gravita };
-
-            if (editingIndex >= 0) {
-                anomalieDB[editingIndex] = anomaliaObj;
-                alert('✅ Anomalia modificata con successo!');
-            } else {
-                anomalieDB.push(anomaliaObj);
-            }
-
-            localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
-            populateAnomalieList();
-            updateManageContent();
-            cancelEdit();
         }
 
         function removeAnomalia(index) {
-            const anomalia = anomalieDB[index];
-            if (confirm('❓ Rimuovere "' + anomalia.nome + '" dal database?')) {
-                anomalieDB.splice(index, 1);
-                localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
-                populateAnomalieList();
-                updateManageContent();
+            try {
+                const anomalia = anomalieDB[index];
+                if (confirm('❓ Rimuovere "' + anomalia.nome + '" dal database?')) {
+                    anomalieDB.splice(index, 1);
+                    
+                    if (!StorageManager.setItem('anomalieDB', anomalieDB)) {
+                        alert('❌ Errore nel salvataggio del database');
+                        return;
+                    }
+                    
+                    // Ricostruisci indice di ricerca
+                    rebuildSearchIndex();
+                    
+                    populateAnomalieList();
+                    updateManageContent();
+                }
+            } catch (error) {
+                console.error('Errore in removeAnomalia:', error);
+                alert('❌ Errore imprevisto nella rimozione');
             }
         }
 
@@ -1779,62 +2119,75 @@
 
         // ========== INIZIALIZZAZIONE ==========
         document.addEventListener('DOMContentLoaded', function() {
-            if (telaioPrefixStorage) {
-                document.getElementById('telaioPrefixInput').value = telaioPrefixStorage;
-            }
-            document.getElementById('searchInput').focus();
+            try {
+                // Inizializza storage con gestione errori
+                if (telaioPrefixStorage) {
+                    document.getElementById('telaioPrefixInput').value = telaioPrefixStorage;
+                }
+                
+                // Costruisci indice di ricerca per performance
+                buildSearchIndex();
+                
+                document.getElementById('searchInput').focus();
 
-            // Setup telaio input per tastiera numerica nativa
-            const telaioInput = document.getElementById('telaio');
-            if (telaioInput) {
-                telaioInput.addEventListener('input', function(e) {
-                    // Permetti solo numeri
-                    this.value = this.value.replace(/[^0-9]/g, '');
+                // Setup telaio input per tastiera numerica nativa
+                const telaioInput = document.getElementById('telaio');
+                if (telaioInput) {
+                    telaioInput.addEventListener('input', function(e) {
+                        // Permetti solo numeri
+                        this.value = this.value.replace(/[^0-9]/g, '');
+                        
+                        // Limita a 5 cifre
+                        if (this.value.length > 5) {
+                            this.value = this.value.slice(0, 5);
+                        }
+                        
+                        updateSubmitButton();
+                    });
                     
-                    // Limita a 5 cifre
-                    if (this.value.length > 5) {
-                        this.value = this.value.slice(0, 5);
-                    }
+                    telaioInput.addEventListener('focus', function() {
+                        // Se c'è l'ultimo telaio e il campo è vuoto, mostralo
+                        if (lastTelaio && this.value === '') {
+                            this.value = lastTelaio;
+                            shouldClearOnNextInput = true;
+                            // Seleziona tutto per facilitare la sostituzione
+                            this.select();
+                        }
+                    });
                     
-                    updateSubmitButton();
-                });
-                
-                telaioInput.addEventListener('focus', function() {
-                    // Se c'è l'ultimo telaio e il campo è vuoto, mostralo
-                    if (lastTelaio && this.value === '') {
-                        this.value = lastTelaio;
-                        shouldClearOnNextInput = true;
-                        // Seleziona tutto per facilitare la sostituzione
-                        this.select();
-                    }
-                });
-                
-                telaioInput.addEventListener('click', function() {
-                    // Quando si clicca, se deve essere cancellato, seleziona tutto
-                    if (shouldClearOnNextInput) {
-                        this.select();
-                    }
-                });
-                
-                telaioInput.addEventListener('keydown', function(e) {
-                    // Se deve essere cancellato e l'utente digita un numero, cancella
-                    if (shouldClearOnNextInput && e.key >= '0' && e.key <= '9') {
-                        this.value = '';
-                        shouldClearOnNextInput = false;
-                    }
-                });
-            }
+                    telaioInput.addEventListener('click', function() {
+                        // Quando si clicca, se deve essere cancellato, seleziona tutto
+                        if (shouldClearOnNextInput) {
+                            this.select();
+                        }
+                    });
+                    
+                    telaioInput.addEventListener('keydown', function(e) {
+                        // Se deve essere cancellato e l'utente digita un numero, cancella
+                        if (shouldClearOnNextInput && e.key >= '0' && e.key <= '9') {
+                            this.value = '';
+                            shouldClearOnNextInput = false;
+                        }
+                    });
+                }
 
-            if (dataStorage.length > 0) {
-                const lastRecord = dataStorage[dataStorage.length - 1];
-                updateLastEntry(lastRecord);
-                lastTelaio = lastRecord.telaiioNumerico || lastRecord.telaio.slice(-5);
-                showMessage('📅 Sessione ripresa: ' + dataStorage.length + ' record salvati', 'success');
-            }
-            
-            if (anomalieDB.length === 0) {
-                showMessage('⚠️ Database anomalie vuoto! Vai in "GESTISCI DB"', 'error');
-                document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;"><strong>DATABASE VUOTO</strong><br><br>Clicca "GESTISCI DB" per aggiungere anomalie</div>';
+                if (dataStorage.length > 0) {
+                    const lastRecord = dataStorage[dataStorage.length - 1];
+                    updateLastEntry(lastRecord);
+                    lastTelaio = lastRecord.telaiioNumerico || lastRecord.telaio.slice(-5);
+                    showMessage('📅 Sessione ripresa: ' + dataStorage.length + ' record salvati', 'success');
+                }
+                
+                if (anomalieDB.length === 0) {
+                    showMessage('⚠️ Database anomalie vuoto! Vai in "GESTISCI DB"', 'error');
+                    document.getElementById('resultsList').innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c; font-size: 18px;"><strong>DATABASE VUOTO</strong><br><br>Clicca "GESTISCI DB" per aggiungere anomalie</div>';
+                } else {
+                    showMessage('✅ Sistema inizializzato. Database: ' + anomalieDB.length + ' anomalie', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Errore durante inizializzazione:', error);
+                showMessage('❌ Errore durante inizializzazione. Ricarica la pagina.', 'error');
             }
         });
     </script>
