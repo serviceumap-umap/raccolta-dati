@@ -537,6 +537,19 @@
                         ✅ Anomalia Selezionata: <span id="selectedAnomalyName"></span>
                     </div>
                 </div>
+                <div id="reworkStatusContainer" style="margin-bottom: 16px; display: flex; justify-content: center; gap: 20px; align-items: center;">
+                    <label style="font-size: 16px; font-weight: bold; color: #2c3e50;">RILAVORAZIONE:</label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 10px; border: 2px solid #27ae60; border-radius: 8px; background: #eafaf1;">
+                        <input type="radio" name="reworkStatus" value="OK" checked onchange="setReworkStatus('OK')" style="transform: scale(1.2); margin-right: 4px;">
+                        <span>OK</span>
+                        <span style="display:inline-flex; align-items:center;">✅</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 10px; border: 2px solid #e74c3c; border-radius: 8px; background: #fdecea;">
+                        <input type="radio" name="reworkStatus" value="KO" onchange="setReworkStatus('KO')" style="transform: scale(1.2); margin-right: 4px;">
+                        <span>KO</span>
+                        <span style="display:inline-flex; align-items:center;">❌</span>
+                    </label>
+                </div>
                 
                 <div style="margin-bottom: 30px;">
                     <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
@@ -625,6 +638,21 @@
         let selectedAnomalia = null;
         let lastTelaio = '';
         let shouldClearOnNextInput = false;
+        let currentReworkStatus = 'OK';
+
+        function setReworkStatus(status) {
+            currentReworkStatus = (status === 'KO') ? 'KO' : 'OK';
+        }
+
+        function getStatusIconHTML(status, size) {
+            var s = size || 16;
+            if (status === 'KO') {
+                var koSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="' + s + '" height="' + s + '"><circle cx="12" cy="12" r="10" fill="#e74c3c"/><path d="M8 8l8 8M16 8l-8 8" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/></svg>';
+                return '<img alt="KO" title="KO" src="data:image/svg+xml;utf8,' + encodeURIComponent(koSvg) + '" style="vertical-align: middle;" />';
+            }
+            var okSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="' + s + '" height="' + s + '"><circle cx="12" cy="12" r="10" fill="#2ecc71"/><path d="M7 12l3 3 7-7" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            return '<img alt="OK" title="OK" src="data:image/svg+xml;utf8,' + encodeURIComponent(okSvg) + '" style="vertical-align: middle;" />';
+        }
         let telaioPrefixStorage = (localStorage.getItem('telaioPrefix') || '').replace(/[^A-Za-z]/g, '').toUpperCase();
         let currentGravitaFilter = 0;
         let currentUteFilter = '';
@@ -1029,7 +1057,8 @@
                 turno: getTurnoCorrente(),
                 timestamp: new Date().toISOString(),
                 date: new Date().toLocaleDateString('it-IT'),
-                time: new Date().toLocaleTimeString('it-IT')
+                time: new Date().toLocaleTimeString('it-IT'),
+                reworkStatus: currentReworkStatus
             };
 
             // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
@@ -1063,7 +1092,8 @@
             html += '<div>';
             html += '<strong>🔧 Anomalia:</strong> ' + data.anomalia + '<br>';
             html += '<strong>🏷️ Telaio:</strong> <span style="font-family: \'Courier New\', monospace; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">' + data.telaio + '</span><br>';
-            html += '<strong>🕐 Orario:</strong> ' + data.time;
+            html += '<strong>🕐 Orario:</strong> ' + data.time + '<br>';
+            html += '<strong>🔁 Rilavorazione:</strong> ' + (getStatusIconHTML(data.reworkStatus, 16)) + ' <span style="font-weight:bold; color:#2c3e50;">' + (data.reworkStatus || 'OK') + '</span>';
             html += '</div>';
             html += '<button onclick="removeLastEntry()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; min-height: 50px;">';
             html += '🗑️ RIMUOVI<br>ULTIMO';
@@ -1109,6 +1139,14 @@
             // Non cancellare il messaggio di successo se è ancora visibile
             document.getElementById('selectedAnomalyDisplay').style.display = 'none';
             selectedAnomalia = null;
+            // Ripristina default OK nelle radio
+            currentReworkStatus = 'OK';
+            try {
+                var radios = document.getElementsByName('reworkStatus');
+                for (var i = 0; i < radios.length; i++) {
+                    radios[i].checked = (radios[i].value === 'OK');
+                }
+            } catch (e) {}
             updateSubmitButton();
             
             // Focus immediato sul campo ricerca per velocità
@@ -1314,6 +1352,7 @@
                     detailHtml += '<div class="detail-telaio" style="display: flex; justify-content: space-between; align-items: center;">';
                     detailHtml += '<div style="display: flex; align-items: center; gap: 10px;">';
                     detailHtml += '<span>' + (idx + 1) + '. <strong>' + item.telaio + '</strong></span>';
+                    detailHtml += '<span>' + getStatusIconHTML(item.reworkStatus, 16) + '</span>';
                     detailHtml += '<span style="color: #6c757d; font-size: 12px;">' + item.date + ' - ' + item.time + '</span>';
                     detailHtml += '</div>';
                     detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + item.telaio + '\', ' + index + ')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px;">❌</button>';
@@ -1398,11 +1437,12 @@
             htmlContent += '<strong>📊 Telai con questa Anomalia:</strong> ' + telaiRelated.length;
             htmlContent += '</div>';
             htmlContent += '<table>';
-            htmlContent += '<thead><tr><th>#</th><th>Telaio</th><th>Data</th><th>Ora</th></tr></thead>';
+            htmlContent += '<thead><tr><th>#</th><th>Stato</th><th>Telaio</th><th>Data</th><th>Ora</th></tr></thead>';
             htmlContent += '<tbody>';
 
             telaiRelated.forEach(function(item, idx) {
-                htmlContent += '<tr><td><strong>' + (idx + 1) + '</strong></td><td class="telaio-code">' + item.telaio + '</td><td>' + item.date + '</td><td>' + item.time + '</td></tr>';
+                var icon = getStatusIconHTML(item.reworkStatus, 16);
+                htmlContent += '<tr><td><strong>' + (idx + 1) + '</strong></td><td>' + icon + ' ' + (item.reworkStatus || 'OK') + '</td><td class="telaio-code">' + item.telaio + '</td><td>' + item.date + '</td><td>' + item.time + '</td></tr>';
             });
 
             htmlContent += '</tbody></table><div class="footer"><strong>📋 Report generato automaticamente</strong><br>Per utilizzarlo: seleziona tutto (Ctrl+A), copia (Ctrl+C) e incolla nella tua email.</div></body></html>';
@@ -1639,6 +1679,7 @@
     emailHTML += '          <thead>\n';
     emailHTML += '            <tr style="background-color: #34495e;">\n';
     emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 50px;">#</th>\n';
+    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 90px;">STATO</th>\n';
     emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
     emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
     emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
@@ -1650,6 +1691,7 @@
         const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
         emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
         emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + getStatusIconHTML(item.reworkStatus, 14) + ' <span style="font-size:12px; color:#2c3e50; font-weight:bold;">' + (item.reworkStatus || 'OK') + '</span></td>\n';
         emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
         emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-wrap: break-word;">' + item.anomalia + '</td>\n';
         emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
