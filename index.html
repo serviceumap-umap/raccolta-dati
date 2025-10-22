@@ -2041,24 +2041,39 @@
         }
 
         async function exportDatabase() {
-            const dbData = {
-                anomalieDB: anomalieDB,
-                exportDate: new Date().toISOString(),
-                version: "2.0",
-                totalAnomalies: anomalieDB.length
-            };
+            if (isExporting) {
+                alert('⏳ Esportazione già in corso. Attendi il completamento.');
+                return;
+            }
 
-            const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
-            const fname = 'database_anomalie_backup_' + today + '.json';
-            const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
-            if (result === 'shared') {
-                alert('📤 Condivisione avviata del database.');
-            } else if (result === 'opened') {
-                alert('📄 Database aperto: usa Condividi → Salva/Invia.');
-            } else if (result === 'downloaded') {
-                alert('✅ DATABASE ESPORTATO!\n\n📄 ' + anomalieDB.length + ' anomalie salvate');
-            } else {
-                alert('❌ Impossibile esportare il database. Riprova.');
+            isExporting = true;
+
+            try {
+                const dbData = {
+                    anomalieDB: anomalieDB,
+                    exportDate: new Date().toISOString(),
+                    version: "2.0",
+                    totalAnomalies: anomalieDB.length
+                };
+
+                const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
+                const fname = 'database_anomalie_backup_' + today + '.json';
+                const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
+                
+                if (result === 'shared') {
+                    alert('📤 Condivisione avviata del database.');
+                } else if (result === 'opened') {
+                    alert('📄 Database aperto: usa Condividi → Salva/Invia.');
+                } else if (result === 'downloaded') {
+                    alert('✅ DATABASE ESPORTATO!\n\n📄 ' + anomalieDB.length + ' anomalie salvate');
+                } else {
+                    alert('❌ Impossibile esportare il database. Riprova.');
+                }
+            } catch (error) {
+                console.error('Errore durante esportazione database:', error);
+                alert('❌ Errore durante l\'esportazione. Riprova.');
+            } finally {
+                isExporting = false;
             }
         }
 
@@ -2095,32 +2110,48 @@
         }
 
         // ========== ESPORTAZIONE/IMPORTAZIONE DATI SESSIONE ==========
+        let isExporting = false; // Flag per evitare esportazioni multiple
+
         async function exportSessionData() {
+            if (isExporting) {
+                alert('⏳ Esportazione già in corso. Attendi il completamento.');
+                return;
+            }
+
             if (dataStorage.length === 0) {
                 alert('❌ La sessione corrente è vuota. Non ci sono dati da esportare.');
                 return;
             }
 
-            const sessionData = {
-                sessionData: dataStorage,
-                exportDate: new Date().toISOString(),
-                version: "1.0",
-                totalRecords: dataStorage.length,
-                exportType: "session"
-            };
+            isExporting = true;
 
-            const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
-            const fname = 'sessione_anomalie_' + today + '.json';
-            const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
+            try {
+                const sessionData = {
+                    sessionData: dataStorage,
+                    exportDate: new Date().toISOString(),
+                    version: "1.0",
+                    totalRecords: dataStorage.length,
+                    exportType: "session"
+                };
+
+                const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+                const fname = 'sessione_anomalie_' + today + '.json';
+                const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
             
-            if (result === 'shared') {
-                alert('📤 Condivisione avviata: scegli WhatsApp, Teams, Email o File.');
-            } else if (result === 'opened') {
-                alert('📄 File aperto: usa Condividi → Salva/Invia per completare.');
-            } else if (result === 'downloaded') {
-                alert('✅ SESSIONE ESPORTATA!\n\n📄 ' + dataStorage.length + ' record salvati\n💾 I dati della sessione corrente rimangono intatti');
-            } else {
-                alert('❌ Impossibile avviare il download/condivisione. Riprova o aggiorna Safari.');
+                if (result === 'shared') {
+                    alert('📤 Condivisione avviata: scegli WhatsApp, Teams, Email o File.');
+                } else if (result === 'opened') {
+                    alert('📄 File aperto: usa Condividi → Salva/Invia per completare.');
+                } else if (result === 'downloaded') {
+                    alert('✅ SESSIONE ESPORTATA!\n\n📄 ' + dataStorage.length + ' record salvati\n💾 I dati della sessione corrente rimangono intatti');
+                } else {
+                    alert('❌ Impossibile avviare il download/condivisione. Riprova o aggiorna Safari.');
+                }
+            } catch (error) {
+                console.error('Errore durante esportazione sessione:', error);
+                alert('❌ Errore durante l\'esportazione. Riprova.');
+            } finally {
+                isExporting = false;
             }
         }
 
