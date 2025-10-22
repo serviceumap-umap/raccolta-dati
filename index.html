@@ -1860,13 +1860,14 @@
             html += '</div>';
 
             html += '<div style="margin-bottom: 25px;">';
-            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">💾 Backup e Ripristino</h3>';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px;">💾 Backup e Ripristino Database</h3>';
             html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
-            html += '<button onclick="exportDatabase()" style="padding: 15px 25px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📤 ESPORTA</button>';
+            html += '<button onclick="exportDatabase()" style="padding: 15px 25px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📤 ESPORTA DB</button>';
             html += '<input type="file" id="importFile" accept=".json" style="display: none;" onchange="importDatabase(event)">';
-            html += '<button onclick="document.getElementById(\'importFile\').click()" style="padding: 15px 25px; background: #9b59b6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📥 IMPORTA</button>';
+            html += '<button onclick="document.getElementById(\'importFile\').click()" style="padding: 15px 25px; background: #9b59b6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📥 IMPORTA DB</button>';
             html += '</div>';
             html += '</div>';
+
 
             document.getElementById('manageContent').innerHTML = html;
         }
@@ -2093,6 +2094,102 @@
             reader.readAsText(file);
         }
 
+        // ========== ESPORTAZIONE/IMPORTAZIONE DATI SESSIONE ==========
+        async function exportSessionData() {
+            if (dataStorage.length === 0) {
+                alert('❌ La sessione corrente è vuota. Non ci sono dati da esportare.');
+                return;
+            }
+
+            const sessionData = {
+                sessionData: dataStorage,
+                exportDate: new Date().toISOString(),
+                version: "1.0",
+                totalRecords: dataStorage.length,
+                exportType: "session"
+            };
+
+            const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+            const fname = 'sessione_anomalie_' + today + '.json';
+            const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
+            
+            if (result === 'shared') {
+                alert('📤 Condivisione avviata: scegli WhatsApp, Teams, Email o File.');
+            } else if (result === 'opened') {
+                alert('📄 File aperto: usa Condividi → Salva/Invia per completare.');
+            } else if (result === 'downloaded') {
+                alert('✅ SESSIONE ESPORTATA!\n\n📄 ' + dataStorage.length + ' record salvati\n💾 I dati della sessione corrente rimangono intatti');
+            } else {
+                alert('❌ Impossibile avviare il download/condivisione. Riprova o aggiorna Safari.');
+            }
+        }
+
+        function importSessionData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.sessionData || !Array.isArray(importedData.sessionData)) {
+                        throw new Error('Formato file non valido - deve essere un file di sessione');
+                    }
+
+                    if (importedData.exportType !== 'session') {
+                        throw new Error('Questo non è un file di sessione. Usa "Importa DB" per i database.');
+                    }
+
+                    const confirmMsg = `❓ CONFERMI L'IMPORTAZIONE DELLA SESSIONE?\n\n` +
+                                     `📊 Record attuali: ${dataStorage.length}\n` +
+                                     `📥 Record da importare: ${importedData.sessionData.length}\n` +
+                                     `📅 Data esportazione: ${new Date(importedData.exportDate).toLocaleDateString('it-IT')}\n\n` +
+                                     `🔄 I dati verranno uniti con merge intelligente per evitare duplicati`;
+
+                    if (confirm(confirmMsg)) {
+                        const mergedData = mergeSessionData(dataStorage, importedData.sessionData);
+                        const addedCount = mergedData.length - dataStorage.length;
+                        
+                        dataStorage = mergedData;
+                        localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+                        updateManageContent();
+                        
+                        alert(`✅ SESSIONE IMPORTATA CON SUCCESSO!\n\n📊 Record totali: ${dataStorage.length}\n➕ Nuovi record aggiunti: ${addedCount}\n🔄 Duplicati evitati: ${importedData.sessionData.length - addedCount}`);
+                    }
+                } catch (error) {
+                    alert(`❌ ERRORE NELL'IMPORTAZIONE:\n${error.message}\n\nVerifica che il file sia un backup valido della sessione.`);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function mergeSessionData(currentData, importedData) {
+            // Crea una mappa per identificare rapidamente i duplicati
+            const existingRecords = new Map();
+            
+            // Aggiungi tutti i record esistenti alla mappa
+            currentData.forEach(record => {
+                const key = `${record.telaio}_${record.anomalia}`.toLowerCase();
+                existingRecords.set(key, record);
+            });
+            
+            // Aggiungi i record importati solo se non sono duplicati
+            const mergedData = [...currentData];
+            
+            importedData.forEach(importedRecord => {
+                const key = `${importedRecord.telaio}_${importedRecord.anomalia}`.toLowerCase();
+                
+                if (!existingRecords.has(key)) {
+                    mergedData.push(importedRecord);
+                    existingRecords.set(key, importedRecord);
+                }
+            });
+            
+            return mergedData;
+        }
+
         window.clearDatabase = function() {
             const code = prompt('Inserisci il codice di sicurezza per azzerare il database:');
             
@@ -2147,6 +2244,22 @@
         function updateSettingsContent() {
             let html = '';
 
+            // Sezione Gestione Sessione (PRIMA)
+            html += '<div style="margin-bottom: 25px; border: 1px solid #bdc3c7; border-radius: 8px; background: #f8f9fa;">';
+            html += '<h3 style="color: #2c3e50; margin-bottom: 15px; padding: 15px 15px 0 15px;">📊 Gestione Sessione</h3>';
+            html += '<div style="padding: 0 15px 15px 15px;">';
+            html += '<div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3498db;">';
+            html += '<p style="margin: 0; color: #2c3e50; font-size: 14px;"><strong>💡 Funzionalità Sessione:</strong> Esporta i dati della sessione corrente senza cancellarli, oppure importa dati da un altro utente con merge intelligente per evitare duplicati.</p>';
+            html += '</div>';
+            html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
+            html += '<button onclick="exportSessionData()" style="padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">📤 ESPORTA SESSIONE</button>';
+            html += '<input type="file" id="importSessionFile" accept=".json" style="display: none;" onchange="importSessionData(event)">';
+            html += '<button onclick="document.getElementById(\'importSessionFile\').click()" style="padding: 12px 20px; background: #e67e22; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">📥 IMPORTA SESSIONE</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            // Sezione Funzioni Avanzate (DOPO)
             html += '<div style="margin-bottom: 25px; border: 1px solid #bdc3c7; border-radius: 8px; background: #f8f9fa;">';
             html += '<h3 style="color: #2c3e50; margin-bottom: 15px; padding: 15px 15px 0 15px;">⚙️ Funzioni Avanzate</h3>';
             html += '<div style="padding: 0 15px 15px 15px;">';
