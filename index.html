@@ -428,6 +428,91 @@
                 padding: 20px;
                 margin: 10% auto;
             }
+            
+            /* OTTIMIZZAZIONI SPECIFICHE PER IL REPORT DI PARETO */
+            .chart-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px;
+                margin: 8px 0;
+                gap: 8px;
+            }
+            
+            /* Ottimizzazione filtri per mobile */
+            .chart-bar + div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            /* Ottimizzazione select per mobile */
+            select {
+                font-size: 16px !important;
+                padding: 12px !important;
+                min-height: 48px !important;
+                touch-action: manipulation;
+            }
+            
+            /* Ottimizzazione pulsanti download per mobile */
+            button[onclick*="downloadCompleteReport"] {
+                width: 100% !important;
+                padding: 15px !important;
+                font-size: 16px !important;
+                min-height: 50px !important;
+                touch-action: manipulation;
+            }
+            .chart-label {
+                font-size: 13px;
+                padding-right: 0;
+                margin-bottom: 5px;
+                line-height: 1.3;
+            }
+            .chart-progress {
+                flex: none;
+                height: 20px;
+                margin: 0 0 8px 0;
+                order: 2;
+            }
+            .chart-value {
+                width: auto;
+                text-align: left;
+                font-size: 14px;
+                order: 1;
+                margin-bottom: 5px;
+            }
+            .chart-bar > div:nth-child(4) {
+                order: 3;
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+            .expand-btn {
+                padding: 8px 12px;
+                font-size: 11px;
+                margin-left: 0;
+                margin-right: 5px;
+                min-height: 36px;
+                touch-action: manipulation;
+            }
+            .detail-list {
+                margin-top: 10px;
+                padding: 12px;
+                max-height: 150px;
+            }
+            .detail-telaio {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: 10px;
+            }
+            .detail-telaio > div:first-child {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .detail-telaio button {
+                align-self: flex-end;
+                margin-left: 0;
+                margin-top: 5px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -462,6 +547,41 @@
                 width: 98%;
                 padding: 15px;
                 margin: 5% auto;
+            }
+            
+            /* OTTIMIZZAZIONI ULTERIORI PER SCHEMI MOLTO PICCOLI */
+            .chart-bar {
+                padding: 10px;
+                margin: 6px 0;
+                gap: 6px;
+            }
+            .chart-label {
+                font-size: 12px;
+                line-height: 1.2;
+            }
+            .chart-progress {
+                height: 18px;
+                margin: 0 0 6px 0;
+            }
+            .chart-value {
+                font-size: 13px;
+            }
+            .chart-bar > div:nth-child(4) {
+                font-size: 10px;
+                margin-bottom: 6px;
+            }
+            .expand-btn {
+                padding: 6px 10px;
+                font-size: 10px;
+                min-height: 32px;
+            }
+            .detail-list {
+                padding: 10px;
+                max-height: 120px;
+            }
+            .detail-telaio {
+                padding: 8px;
+                gap: 6px;
             }
         }
         
@@ -555,7 +675,7 @@
                 </div>
                 
                 <div style="margin-bottom: 30px;">
-                    <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block;">TELAIO COMPLETO:</label>
+                    <label style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block; text-align: center;">TELAIO:</label>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
                         <input type="text" 
                                id="telaioPrefixInput" 
@@ -1337,13 +1457,14 @@
                 html += '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">' + ute + '</span>';
                 html += '</div>';
                 html += '</div>';
+                html += '<div class="chart-value">' + count + '</div>';
                 html += '<div class="chart-progress">';
                 html += '<div class="chart-fill" style="width: ' + width + '%"></div>';
                 html += '</div>';
-                html += '<div class="chart-value">' + count + '</div>';
                 html += '<div style="width: 60px; text-align: center; font-size: 12px; color: #666;">' + percent + '%</div>';
+                html += '<div style="display: flex; gap: 5px; margin-top: 8px;">';
                 html += '<button class="expand-btn" onclick="toggleDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')">👁️ Dettagli</button>';
-                html += '<button onclick="exportAnomaliaDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')" style="background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-left: 5px;">📤 ESPORTA</button>';
+                html += '</div>';
                 html += '</div>';
                 html += '<div id="details-' + index + '" style="display: none;"></div>';
             });
@@ -1359,7 +1480,7 @@
             if (detailsDiv.style.display === 'none') {
                 const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomalia; });
                 
-                let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: "' + anomalia + '" (' + telaiRelated.length + ')</h4>';
+                let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: (' + telaiRelated.length + ')</h4>';
                 
                 telaiRelated.forEach(function(item, idx) {
                     detailHtml += '<div class="detail-telaio" style="display: flex; justify-content: space-between; align-items: center;">';
@@ -1425,45 +1546,11 @@
             }
         }
 
-        function exportAnomaliaDetails(anomaliaName, index) {
-            const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomaliaName; });
-            if (telaiRelated.length === 0) return;
-
-            const currentDate = new Date();
-            let htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>';
-            htmlContent += 'body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }';
-            htmlContent += 'h1 { color: #2c3e50; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; }';
-            htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 20px 0; }';
-            htmlContent += 'th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }';
-            htmlContent += 'th { background-color: #e74c3c; color: white; font-weight: bold; }';
-            htmlContent += 'tr:nth-child(even) { background-color: #f9f9f9; }';
-            htmlContent += '.summary { background-color: #fdf2f2; padding: 15px; border-radius: 8px; margin: 20px 0; }';
-            htmlContent += '.telaio-code { font-family: "Courier New", monospace; font-weight: bold; }';
-            htmlContent += '.footer { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; font-size: 14px; color: #666; }';
-            htmlContent += '</style></head><body>';
-            htmlContent += '<h1>🔧 DETTAGLIO ANOMALIA</h1>';
-            htmlContent += '<div style="background-color: #e74c3c; color: white; padding: 10px; border-radius: 6px; margin: 15px 0;">';
-            htmlContent += '<h2 style="margin: 0;">📋 ' + anomaliaName + '</h2>';
-            htmlContent += '</div>';
-            htmlContent += '<div class="summary">';
-            htmlContent += '<strong>📅 Data:</strong> ' + currentDate.toLocaleDateString('it-IT') + ' - ' + currentDate.toLocaleTimeString('it-IT') + '<br>';
-            htmlContent += '<strong>📊 Telai con questa Anomalia:</strong> ' + telaiRelated.length;
-            htmlContent += '</div>';
-            htmlContent += '<table>';
-            htmlContent += '<thead><tr><th>#</th><th>Stato</th><th>Telaio</th><th>Data</th><th>Ora</th></tr></thead>';
-            htmlContent += '<tbody>';
-
-            telaiRelated.forEach(function(item, idx) {
-                var icon = getStatusIconHTML(item.reworkStatus, 16);
-                htmlContent += '<tr><td><strong>' + (idx + 1) + '</strong></td><td>' + icon + ' ' + (item.reworkStatus || 'OK') + '</td><td class="telaio-code">' + item.telaio + '</td><td>' + item.date + '</td><td>' + item.time + '</td></tr>';
-            });
-
-            htmlContent += '</tbody></table><div class="footer"><strong>📋 Report generato automaticamente</strong><br>Per utilizzarlo: seleziona tutto (Ctrl+A), copia (Ctrl+C) e incolla nella tua email.</div></body></html>';
-
-            const newWindow = window.open('', '_blank', 'width=700,height=600,scrollbars=yes');
-            newWindow.document.write(htmlContent);
-            newWindow.document.close();
-            newWindow.document.title = 'Dettaglio_' + anomaliaName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + today;
+        function getStatusEmoji(status) {
+            if (status === 'KO') {
+                return '❌';
+            }
+            return '✅';
         }
 
         async function downloadCompleteReport() {
@@ -1543,7 +1630,7 @@
     
     // STILI CSS RESPONSIVE
     emailHTML += '<style>\n';
-    emailHTML += 'body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f5f5f5;}\n';
+    emailHTML += 'body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f8f9fa;}\n';
     emailHTML += '.report-container{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#ffffff;padding:0;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);}\n';
     
     // Media Query per Mobile
@@ -1571,34 +1658,34 @@
     emailHTML += '<div class="report-container">\n\n';
     
     emailHTML += '  <!-- HEADER -->\n';
-    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #2c3e50; border-radius: 10px 10px 0 0;">\n';
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1a365d; border-radius: 10px 10px 0 0;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td style="padding: 30px; text-align: center;">\n';
     emailHTML += '        <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px 0; font-weight: bold;">📊 REPORT ANOMALIE</h1>\n';
-    emailHTML += '        <p style="color: #ecf0f1; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
+    emailHTML += '        <p style="color: #e2e8f0; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
     emailHTML += '      </td>\n';
     emailHTML += '    </tr>\n';
     emailHTML += '  </table>\n\n';
     
     emailHTML += '  <!-- INFORMAZIONI SESSIONE -->\n';
-    emailHTML += '  <table width="100%" cellpadding="15" cellspacing="0" border="0" style="background-color: #ecf0f1;">\n';
+    emailHTML += '  <table width="100%" cellpadding="15" cellspacing="0" border="0" style="background-color: #f1f5f9;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
     emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📅 DATA REPORT</p>\n';
-    emailHTML += '          <p style="color: #2c3e50; font-size: 18px; margin: 0; font-weight: bold;">' + day + '/' + month + '/' + year + '</p>\n';
+    emailHTML += '          <p style="color: #64748b; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📅 DATA REPORT</p>\n';
+    emailHTML += '          <p style="color: #1e293b; font-size: 18px; margin: 0; font-weight: bold;">' + day + '/' + month + '/' + year + '</p>\n';
     emailHTML += '        </div>\n';
     emailHTML += '      </td>\n';
     emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
     emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📊 TOTALE KO</p>\n';
-    emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + total + '</p>\n';
+    emailHTML += '          <p style="color: #64748b; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">📊 TOTALE KO</p>\n';
+    emailHTML += '          <p style="color: #1e293b; font-size: 24px; margin: 0; font-weight: bold;">' + total + '</p>\n';
     emailHTML += '        </div>\n';
     emailHTML += '      </td>\n';
     emailHTML += '      <td width="33.33%" style="text-align: center; padding: 20px;" class="stats-box">\n';
     emailHTML += '        <div style="background: #ffffff; padding: 15px; border-radius: 8px;">\n';
-    emailHTML += '          <p style="color: #7f8c8d; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">🔧 ANOMALIE UNICHE</p>\n';
-    emailHTML += '          <p style="color: #2c3e50; font-size: 24px; margin: 0; font-weight: bold;">' + Object.keys(frequencies).length + '</p>\n';
+    emailHTML += '          <p style="color: #64748b; font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">🔧 ANOMALIE UNICHE</p>\n';
+    emailHTML += '          <p style="color: #1e293b; font-size: 24px; margin: 0; font-weight: bold;">' + Object.keys(frequencies).length + '</p>\n';
     emailHTML += '        </div>\n';
     emailHTML += '      </td>\n';
     emailHTML += '    </tr>\n';
@@ -1612,35 +1699,35 @@
     emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td>\n';
-    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">🏆 TOP 5 ANOMALIE RIPETITIVE</h2>\n';
+    emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">🏆 TOP 5 ANOMALIE RIPETITIVE</h2>\n';
     
     top5.forEach(function(entry, index) {
         const anomalia = entry[0];
         const count = entry[1];
         const percent = ((count / total) * 100).toFixed(1);
         const details = anomaliaDetails[anomalia];
-        const textBar = createTextBar(count, maxTop5Count, 20, '#e74c3c');
+        const textBar = createTextBar(count, maxTop5Count, 20, '#dc2626');
         
         emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="top5-table" style="margin-bottom: 12px; background-color: #f8f9fa; border-radius: 8px;">\n';
         emailHTML += '          <tr>\n';
         emailHTML += '            <td width="50" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-rank">\n';
-        emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #e74c3c;">' + (index + 1) + '</span>\n';
+        emailHTML += '              <span style="font-size: 24px; font-weight: bold; color: #dc2626;">' + (index + 1) + '</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td width="200" style="padding: 12px; vertical-align: middle;" class="bar-label">\n';
-        emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #2c3e50; font-size: 14px;">' + anomalia + '</p>\n';
+        emailHTML += '              <p style="margin: 0 0 5px 0; font-weight: bold; color: #1e293b; font-size: 14px;">' + anomalia + '</p>\n';
         emailHTML += '              <p style="margin: 0; font-size: 12px;">\n';
-        emailHTML += '                <span style="background-color: #3498db; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
+        emailHTML += '                <span style="background-color: #2563eb; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px;">' + details.ute + '</span>\n';
         emailHTML += '              </p>\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td style="padding: 12px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
         emailHTML += '              ' + textBar + '\n';
         emailHTML += '            </td>\n';
-        emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</span> ';
-        emailHTML += '              <span style="font-size: 10px; color: #7f8c8d;">CASI</span>\n';
+        emailHTML += '                        <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+            emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 18px;">' + count + '</span> ';
+            emailHTML += '              <span style="font-size: 10px; color: #64748b;">CASI</span>\n';
         emailHTML += '            </td>\n';
-        emailHTML += '            <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + percent + '%</span>\n';
+        emailHTML += '                        <td width="80" style="padding: 12px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+            emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 18px;">' + percent + '%</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '          </tr>\n';
         emailHTML += '        </table>\n';
@@ -1651,7 +1738,7 @@
     emailHTML += '  </table>\n\n';
     
     emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
-    emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+    emailHTML += '    <tr><td style="height: 3px; background-color: #cbd5e1;"></td></tr>\n';
     emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
     emailHTML += '  </table>\n\n';
     
@@ -1659,28 +1746,28 @@
     emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td>\n';
-    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #3498db; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
+    emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #2563eb; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
     
     sortedUteStats.forEach(function(entry) {
         const ute = entry[0];
         const count = entry[1];
         const percent = ((count / total) * 100).toFixed(1);
-        const textBar = createTextBar(count, maxUteCount, 25, '#3498db');
+        const textBar = createTextBar(count, maxUteCount, 25, '#2563eb');
         
         emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="ute-table" style="margin-bottom: 12px;">\n';
         emailHTML += '          <tr>\n';
         emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;" class="bar-label">\n';
-        emailHTML += '              <span style="background-color: #3498db; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
+        emailHTML += '              <span style="background-color: #2563eb; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
         emailHTML += '              ' + textBar + '\n';
         emailHTML += '            </td>\n';
-        emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 18px;">' + count + '</span> ';
-        emailHTML += '              <span style="font-size: 10px; color: #7f8c8d;">KO</span>\n';
+        emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+            emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 18px;">' + count + '</span> ';
+            emailHTML += '              <span style="font-size: 10px; color: #64748b;">KO</span>\n';
         emailHTML += '            </td>\n';
-        emailHTML += '            <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-        emailHTML += '              <span style="font-weight: bold; color: #2c3e50; font-size: 16px;">' + percent + '%</span>\n';
+        emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+            emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 16px;">' + percent + '%</span>\n';
         emailHTML += '            </td>\n';
         emailHTML += '          </tr>\n';
         emailHTML += '        </table>\n';
@@ -1691,7 +1778,7 @@
     emailHTML += '  </table>\n\n';
     
     emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
-    emailHTML += '    <tr><td style="height: 3px; background-color: #bdc3c7;"></td></tr>\n';
+    emailHTML += '    <tr><td style="height: 3px; background-color: #cbd5e1;"></td></tr>\n';
     emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
     emailHTML += '  </table>\n\n';
     
@@ -1699,15 +1786,15 @@
     emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td style="overflow-x: auto;">\n';
-    emailHTML += '        <h2 style="color: #2c3e50; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #e74c3c; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
+    emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
     emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse; min-width: 100%;">\n';
     emailHTML += '          <thead>\n';
-    emailHTML += '            <tr style="background-color: #34495e;">\n';
-    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 50px;">#</th>\n';
-    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 90px;">STATO</th>\n';
-    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">TELAIO</th>\n';
-    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50;">ANOMALIA</th>\n';
-    emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #2c3e50; width: 100px;">UTE</th>\n';
+    emailHTML += '                        <tr style="background-color: #1e293b;">\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 40px;">#</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 60px;">STATO</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 100px;">TELAIO</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a;">ANOMALIA</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 120px;">UTE</th>\n';
     emailHTML += '            </tr>\n';
     emailHTML += '          </thead>\n';
     emailHTML += '          <tbody>\n';
@@ -1715,11 +1802,11 @@
     sortedData.forEach(function(item, index) {
         const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
         emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
-        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: bold;">' + (index + 1) + '</td>\n';
-        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;">' + getStatusIconHTML(item.reworkStatus, 14) + ' <span style="font-size:12px; color:#2c3e50; font-weight:bold;">' + (item.reworkStatus || 'OK') + '</span></td>\n';
-        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
-        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1; word-wrap: break-word;">' + item.anomalia + '</td>\n';
-        emailHTML += '              <td style="padding: 10px; border: 1px solid #ecf0f1;"><span style="background-color: #3498db; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">' + (index + 1) + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;">' + getStatusEmoji(item.reworkStatus) + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-wrap: break-word;">' + item.anomalia + '</td>\n';
+        emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;"><span style="background-color: #2563eb; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
         emailHTML += '            </tr>\n';
     });
     
@@ -1730,11 +1817,11 @@
     emailHTML += '  </table>\n\n';
     
     emailHTML += '  <!-- FOOTER -->\n';
-    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #34495e; border-radius: 0 0 10px 10px; margin-top: 20px;">\n';
+    emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1e293b; border-radius: 0 0 10px 10px; margin-top: 20px;">\n';
     emailHTML += '    <tr>\n';
     emailHTML += '      <td style="padding: 20px; text-align: center;">\n';
-    emailHTML += '        <p style="color: #ecf0f1; font-size: 13px; margin: 0;">🔧 Report generato automaticamente dal Sistema di Raccolta Dati Anomalie</p>\n';
-    emailHTML += '        <p style="color: #95a5a6; font-size: 11px; margin: 10px 0 0 0;">Documento generato il ' + day + '/' + month + '/' + year + ' alle ore ' + hours + ':' + minutes + '</p>\n';
+    emailHTML += '        <p style="color: #e2e8f0; font-size: 13px; margin: 0;">🔧 Report generato automaticamente dal Sistema di Raccolta Dati Anomalie</p>\n';
+    emailHTML += '        <p style="color: #94a3b8; font-size: 11px; margin: 10px 0 0 0;">Documento generato il ' + day + '/' + month + '/' + year + ' alle ore ' + hours + ':' + minutes + '</p>\n';
     emailHTML += '      </td>\n';
     emailHTML += '    </tr>\n';
     emailHTML += '  </table>\n\n';
@@ -1836,6 +1923,7 @@
             html += '<option value="UTE 11">UTE 11</option>';
             html += '<option value="UTE 71">UTE 71</option>';
             html += '<option value="LOG">LOG</option>';
+            html += '<option value="VERN">VERN</option>';
             html += '</select>';
             html += '</div>';
 
@@ -2135,7 +2223,14 @@
                 };
 
                 const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
-                const fname = 'sessione_anomalie_' + today + '.json';
+                
+                // Genera nome file nel formato: sessione-GG-MM_hh-mm
+                const exportDate = new Date();
+                const day = exportDate.getDate().toString().padStart(2, '0');
+                const month = (exportDate.getMonth() + 1).toString().padStart(2, '0');
+                const hour = exportDate.getHours().toString().padStart(2, '0');
+                const minute = exportDate.getMinutes().toString().padStart(2, '0');
+                const fname = `sessione-${day}-${month}_${hour}-${minute}.json`;
                 const result = await downloadBlobCrossPlatform(blob, fname, 'application/json');
             
                 if (result === 'shared') {
