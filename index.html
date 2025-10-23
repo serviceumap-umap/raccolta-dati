@@ -813,7 +813,7 @@
         }
         let telaioPrefixStorage = (localStorage.getItem('telaioPrefix') || '').replace(/[^A-Za-z]/g, '').toUpperCase();
         let currentGravitaFilter = 0;
-        let currentUteFilter = '';
+        let currentUteFilter = [];
 		let isResultsCollapsed = false;
         
         // ========== SISTEMA DI INDICIZZAZIONE PER RICERCA VELOCE ==========
@@ -1373,7 +1373,7 @@
         // ========== REPORT FUNCTIONS ==========
         function showReport() {
             currentGravitaFilter = 0;
-            currentUteFilter = '';
+            currentUteFilter = [];
             
             if (dataStorage.length === 0) {
                 let html = '<div style="padding: 20px; background: #fff3cd; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">';
@@ -1394,10 +1394,70 @@
             renderReport();
         }
         
-        function filterByUte(ute) {
-            currentUteFilter = ute || '';
+        function filterByUte(ute, isChecked) {
+            if (isChecked) {
+                if (!currentUteFilter.includes(ute)) {
+                    currentUteFilter.push(ute);
+                }
+            } else {
+                currentUteFilter = currentUteFilter.filter(u => u !== ute);
+            }
+            updateUteDropdownText();
+            renderReport();
+            
+            // Riapri il dropdown dopo un breve delay per permettere la selezione multipla
+            setTimeout(function() {
+                const dropdown = document.getElementById('uteDropdownContent');
+                if (dropdown) {
+                    dropdown.style.display = 'block';
+                }
+            }, 50);
+        }
+
+        function toggleUteDropdown() {
+            const dropdown = document.getElementById('uteDropdownContent');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function updateUteDropdownText() {
+            const textElement = document.getElementById('uteDropdownText');
+            if (textElement) {
+                if (currentUteFilter.length === 0) {
+                    textElement.textContent = '🏭 TUTTE LE UTE';
+                } else if (currentUteFilter.length === 1) {
+                    textElement.textContent = currentUteFilter[0];
+                } else {
+                    textElement.textContent = '🏭 ' + currentUteFilter.length + ' UTE SELEZIONATE';
+                }
+            }
+        }
+
+        function clearUteFilter() {
+            currentUteFilter = [];
+            // Deseleziona tutti i checkbox
+            const checkboxes = document.querySelectorAll('#uteDropdownContent input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            // Chiudi il dropdown
+            const dropdown = document.getElementById('uteDropdownContent');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+            updateUteDropdownText();
             renderReport();
         }
+
+        // Chiudi il dropdown quando si clicca fuori
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('uteDropdownContent');
+            const button = document.getElementById('uteDropdownBtn');
+            if (dropdown && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
         function renderReport() {
             let filteredData = dataStorage;
@@ -1408,9 +1468,9 @@
                 });
             }
             
-            if (currentUteFilter && currentUteFilter !== '') {
+            if (currentUteFilter && currentUteFilter.length > 0) {
                 filteredData = filteredData.filter(function(item) {
-                    return item.ute === currentUteFilter;
+                    return currentUteFilter.includes(item.ute);
                 });
             }
 
@@ -1422,21 +1482,38 @@
 
             let html = '<div style="display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">';
             html += '<span style="font-weight: bold; margin-right: 10px;">FILTRI:</span>';
-            html += '<select id="uteFilter" onchange="filterByUte(this.value)" style="padding: 8px 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 14px; font-weight: bold;">';
-            html += '<option value="">🏭 TUTTE LE UTE</option>';
+            
+            // Dropdown personalizzato per UTE
+            html += '<div id="uteDropdownContainer" style="position: relative; display: inline-block;">';
+            html += '<div style="display: flex; align-items: center; gap: 5px;">';
+            html += '<button id="uteDropdownBtn" onclick="toggleUteDropdown()" style="padding: 8px 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 14px; font-weight: bold; background: white; cursor: pointer; min-width: 200px; text-align: left; display: flex; justify-content: space-between; align-items: center;">';
+            html += '<span id="uteDropdownText">🏭 TUTTE LE UTE</span>';
+            html += '<span style="margin-left: 10px;">▼</span>';
+            html += '</button>';
+            html += '<button onclick="clearUteFilter()" style="padding: 6px; border: 1px solid #e74c3c; border-radius: 4px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'" title="Cancella filtro UTE">';
+            html += '<span style="color: #e74c3c; font-size: 12px;">✕</span>';
+            html += '</button>';
+            html += '</div>';
+            
+            html += '<div id="uteDropdownContent" style="display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1000; border: 1px solid #bdc3c7; border-radius: 6px; max-height: 300px; overflow-y: auto;">';
             
             uteList.forEach(function(ute) {
-                const selected = currentUteFilter === ute ? 'selected' : '';
-                html += '<option value="' + ute + '" ' + selected + '>' + ute + '</option>';
+                const isChecked = currentUteFilter.includes(ute);
+                const checkedAttr = isChecked ? 'checked' : '';
+                html += '<label style="display: flex; align-items: center; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 13px;">';
+                html += '<input type="checkbox" value="' + ute + '" ' + checkedAttr + ' onchange="filterByUte(this.value, this.checked)" style="margin-right: 8px;">';
+                html += '<span>' + ute + '</span>';
+                html += '</label>';
             });
             
-            html += '</select>';
+            html += '</div>';
+            html += '</div>';
             html += '</div>';
             
             html += '<div style="margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">';
             html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">';
             html += '<div>';
-            html += '<strong>📈 Registrazioni: ' + filteredData.length + '</strong> ' + ((currentGravitaFilter > 0 || currentUteFilter) ? '(filtrate)' : '') + '<br>';
+            html += '<strong>📈 Registrazioni: ' + filteredData.length + '</strong> ' + ((currentGravitaFilter > 0 || currentUteFilter.length > 0) ? '(filtrate)' : '') + '<br>';
             html += '<strong>📅 Sessione: ' + today + '</strong>';
             html += '</div>';
             html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
@@ -1497,6 +1574,7 @@
 
             html += '</div>';
             document.getElementById('reportContent').innerHTML = html;
+            updateUteDropdownText();
         }
 
         function toggleDetails(anomalia, index) {
