@@ -306,6 +306,17 @@
             margin-left: 5px;
         }
         .expand-btn:hover { background: #138496; }
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .export-btn:hover { background: #218838; }
         .detail-list {
             margin-top: 15px;
             padding: 15px;
@@ -316,16 +327,14 @@
             overflow-y: auto;
         }
         .detail-telaio {
-            padding: 8px 12px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             background: white;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid #dee2e6;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #2c3e50;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 10px;
             align-items: center;
         }
         
@@ -498,20 +507,18 @@
                 max-height: 150px;
             }
             .detail-telaio {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
-                padding: 10px;
+                padding: 15px;
+                margin: 10px 0;
+                gap: 12px;
             }
-            .detail-telaio > div:first-child {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
+            .detail-telaio div {
+                text-align: center;
             }
             .detail-telaio button {
-                align-self: flex-end;
-                margin-left: 0;
-                margin-top: 5px;
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                margin-top: 8px;
             }
         }
         
@@ -580,8 +587,17 @@
                 max-height: 120px;
             }
             .detail-telaio {
-                padding: 8px;
-                gap: 6px;
+                padding: 12px;
+                gap: 10px;
+                margin: 8px 0;
+            }
+            .detail-telaio div {
+                text-align: center;
+            }
+            .detail-telaio button {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
             }
         }
         
@@ -775,6 +791,15 @@
 
         function setReworkStatus(status) {
             currentReworkStatus = (status === 'KO') ? 'KO' : 'OK';
+            
+            // Se si seleziona KO o OK, porta il focus sul campo telaio
+            if (status === 'KO' || status === 'OK') {
+                const telaioInput = document.getElementById('telaio');
+                if (telaioInput) {
+                    telaioInput.focus();
+                    telaioInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
         }
 
         function getStatusIconHTML(status, size) {
@@ -1464,6 +1489,7 @@
                 html += '<div style="width: 60px; text-align: center; font-size: 12px; color: #666;">' + percent + '%</div>';
                 html += '<div style="display: flex; gap: 5px; margin-top: 8px;">';
                 html += '<button class="expand-btn" onclick="toggleDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')">👁️ Dettagli</button>';
+                html += '<button class="export-btn" onclick="exportAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + count + ')">📤 Esporta</button>';
                 html += '</div>';
                 html += '</div>';
                 html += '<div id="details-' + index + '" style="display: none;"></div>';
@@ -1481,17 +1507,22 @@
                 const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomalia; });
                 
                 let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: (' + telaiRelated.length + ')</h4>';
+                detailHtml += '<div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef;">';
                 
                 telaiRelated.forEach(function(item, idx) {
-                    detailHtml += '<div class="detail-telaio" style="display: flex; justify-content: space-between; align-items: center;">';
-                    detailHtml += '<div style="display: flex; align-items: center; gap: 10px;">';
-                    detailHtml += '<span>' + (idx + 1) + '. <strong>' + item.telaio + '</strong></span>';
-                    detailHtml += '<span>' + getStatusIconHTML(item.reworkStatus, 16) + '</span>';
-                    detailHtml += '<span style="color: #6c757d; font-size: 12px;">' + item.date + ' - ' + item.time + '</span>';
-                    detailHtml += '</div>';
-                    detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + item.telaio + '\', ' + index + ')" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 10px;">❌</button>';
+                    const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
+                    
+                    detailHtml += '<div style="display: flex; align-items: center; padding: 6px 0; font-family: monospace; font-size: 14px;">';
+                    detailHtml += '<span style="color: #495057; margin-right: 8px; min-width: 15px;">' + (idx + 1) + '.</span>';
+                    detailHtml += '<span style="font-weight: bold; color: #2c3e50; margin-right: 8px; min-width: 70px;">' + item.telaio + '</span>';
+                    detailHtml += '<span style="margin-right: 8px;">-</span>';
+                    detailHtml += '<span style="margin-right: 8px;">' + statusIcon + '</span>';
+                    detailHtml += '<span style="margin-right: 8px;">-</span>';
+                    detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + item.telaio + '\', ' + index + ')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px;">🗑️</button>';
                     detailHtml += '</div>';
                 });
+                
+                detailHtml += '</div>';
                 
                 detailHtml += '</div>';
                 detailsDiv.innerHTML = detailHtml;
@@ -1501,6 +1532,269 @@
                 detailsDiv.style.display = 'none';
                 btn.textContent = '👁️ Dettagli';
             }
+        }
+
+        function exportAnomalia(anomaliaName, totalCount) {
+            const telaiRelated = dataStorage.filter(function(item) { return item.anomalia === anomaliaName; });
+            
+            // Crea il formato testo per copiare
+            let textFormat = `🔍 ANOMALIA: ${anomaliaName}\n`;
+            textFormat += `📊 CASI TOTALI: ${totalCount}\n\n`;
+            textFormat += `📋 LISTA TELAI:\n`;
+            
+            telaiRelated.forEach(function(item, idx) {
+                const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
+                textFormat += `${idx + 1}. ${item.telaio} - ${statusIcon}\n`;
+            });
+            
+            // Crea la pagina HTML
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Anomalia - ${anomaliaName}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .telai-section {
+            padding: 30px;
+        }
+        .telai-section h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .telaio-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f4;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .telaio-item:last-child {
+            border-bottom: none;
+        }
+        .telaio-number {
+            color: #6c757d;
+            margin-right: 15px;
+            min-width: 25px;
+        }
+        .telaio-code {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-right: 15px;
+            min-width: 80px;
+        }
+        .telaio-status {
+            font-size: 16px;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Report Anomalia</h1>
+            <div class="subtitle">${anomaliaName}</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">${totalCount}</div>
+                <div class="stat-label">Casi Totali</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">${telaiRelated.length}</div>
+                <div class="stat-label">Telai</div>
+            </div>
+        </div>
+        
+        <div class="telai-section">
+            <h2>📋 Lista Telai</h2>
+            ${telaiRelated.map(function(item, idx) {
+                const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
+                return `
+                <div class="telaio-item">
+                    <span class="telaio-number">${idx + 1}.</span>
+                    <span class="telaio-code">${item.telaio}</span>
+                    <span class="telaio-status">${statusIcon}</span>
+                </div>`;
+            }).join('')}
+        </div>
+        
+        <div class="footer">
+            Generato il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Prima copia il testo negli appunti
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textFormat;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            
+            // Crea popup overlay
+            const popupId = 'export-popup-' + Date.now();
+            const popupHTML = `
+                <div id="${popupId}" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.8);
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    box-sizing: border-box;
+                ">
+                    <div style="
+                        background: white;
+                        border-radius: 15px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        max-width: 600px;
+                        width: 100%;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                        position: relative;
+                    ">
+                        <!-- Header -->
+                        <div style="
+                            background: #f8f9fa;
+                            color: #2c3e50;
+                            padding: 15px 20px;
+                            text-align: center;
+                            border-bottom: 1px solid #e9ecef;
+                        ">
+                            <div style="font-size: 16px; font-weight: bold;">${anomaliaName}</div>
+                        </div>
+                        
+                        <!-- Telai List -->
+                        <div style="padding: 20px;">
+                            <div style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; font-weight: bold;">Telai</div>
+                            ${telaiRelated.map(function(item, idx) {
+                                const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
+                                return `
+                                <div style="
+                                    display: flex;
+                                    align-items: center;
+                                    padding: 6px 0;
+                                    border-bottom: 1px solid #f1f3f4;
+                                    font-family: 'Courier New', monospace;
+                                    font-size: 14px;
+                                ">
+                                    <span style="color: #6c757d; margin-right: 15px; min-width: 25px;">${idx + 1}.</span>
+                                    <span style="font-weight: bold; color: #2c3e50; margin-right: 15px; min-width: 80px;">${item.telaio}</span>
+                                    <span style="font-size: 16px;">${statusIcon}</span>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div style="
+                            background: #f8f9fa;
+                            padding: 10px;
+                            text-align: center;
+                            color: #6c757d;
+                            font-size: 10px;
+                        ">
+                            ${new Date().toLocaleDateString('it-IT')} ${new Date().toLocaleTimeString('it-IT')}
+                        </div>
+                        
+                        <!-- Close Button -->
+                        <button onclick="document.getElementById('${popupId}').remove()" style="
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: #dc3545;
+                            border: none;
+                            color: white;
+                            width: 30px;
+                            height: 30px;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            font-size: 16px;
+                            font-weight: bold;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">×</button>
+                    </div>
+                </div>
+            `;
+            
+            // Aggiungi il popup al body
+            document.body.insertAdjacentHTML('beforeend', popupHTML);
+            
+            // Mostra conferma
+            alert('✅ Testo copiato negli appunti!');
         }
 
         function deleteTelaioFromAnomalia(anomaliaName, telaioToDelete, reportIndex) {
