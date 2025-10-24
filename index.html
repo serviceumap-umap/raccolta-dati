@@ -268,55 +268,101 @@
         .close:hover { color: #000; }
         .chart-bar {
             display: flex;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            flex-direction: column;
+            margin: 15px 0;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
         }
-        .chart-label { flex: 1; font-size: 14px; padding-right: 15px; }
-        .chart-value {
-            width: 60px;
-            text-align: center;
+        .chart-bar:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .chart-label { 
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .chart-label .anomalia-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .chart-label .anomalia-ute {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
-            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .chart-progress {
-            flex: 2;
-            height: 25px;
+            width: 100%;
+            height: 20px;
             background: #ecf0f1;
-            border-radius: 15px;
-            margin: 0 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             overflow: hidden;
+            position: relative;
         }
         .chart-fill {
             height: 100%;
             background: linear-gradient(90deg, #3498db, #2980b9);
-            border-radius: 15px;
+            border-radius: 10px;
             transition: width 0.5s ease;
+            position: relative;
+        }
+        .chart-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
+            border-radius: 10px;
         }
         .expand-btn {
-            background: #17a2b8;
+            background: linear-gradient(135deg, #17a2b8, #138496);
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            margin-left: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
         }
-        .expand-btn:hover { background: #138496; }
+        .expand-btn:hover { 
+            background: linear-gradient(135deg, #138496, #0f6674);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(23, 162, 184, 0.4);
+        }
         .export-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745, #218838);
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            margin-left: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
         }
-        .export-btn:hover { background: #218838; }
+        .export-btn:hover { 
+            background: linear-gradient(135deg, #218838, #1e7e34);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+        }
         .detail-list {
             margin-top: 15px;
             padding: 15px;
@@ -440,11 +486,20 @@
             
             /* OTTIMIZZAZIONI SPECIFICHE PER IL REPORT DI PARETO */
             .chart-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 12px;
-                margin: 8px 0;
-                gap: 8px;
+                padding: 15px;
+                margin: 12px 0;
+            }
+            .chart-label .anomalia-name {
+                font-size: 18px;
+                line-height: 1.3;
+            }
+            .chart-label .anomalia-ute {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+            .chart-progress {
+                height: 18px;
+                margin-bottom: 10px;
             }
             
             /* Ottimizzazione filtri per mobile */
@@ -558,17 +613,20 @@
             
             /* OTTIMIZZAZIONI ULTERIORI PER SCHEMI MOLTO PICCOLI */
             .chart-bar {
-                padding: 10px;
-                margin: 6px 0;
-                gap: 6px;
+                padding: 12px;
+                margin: 8px 0;
             }
-            .chart-label {
-                font-size: 12px;
+            .chart-label .anomalia-name {
+                font-size: 16px;
                 line-height: 1.2;
             }
+            .chart-label .anomalia-ute {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
             .chart-progress {
-                height: 18px;
-                margin: 0 0 6px 0;
+                height: 16px;
+                margin-bottom: 8px;
             }
             .chart-value {
                 font-size: 13px;
@@ -814,6 +872,7 @@
         let telaioPrefixStorage = (localStorage.getItem('telaioPrefix') || '').replace(/[^A-Za-z]/g, '').toUpperCase();
         let currentGravitaFilter = 0;
         let currentUteFilter = [];
+        let currentStatusFilter = '';
 		let isResultsCollapsed = false;
         
         // ========== SISTEMA DI INDICIZZAZIONE PER RICERCA VELOCE ==========
@@ -1374,6 +1433,7 @@
         function showReport() {
             currentGravitaFilter = 0;
             currentUteFilter = [];
+            currentStatusFilter = '';
             
             if (dataStorage.length === 0) {
                 let html = '<div style="padding: 20px; background: #fff3cd; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">';
@@ -1391,6 +1451,11 @@
 
         function filterByGravita(gravita) {
             currentGravitaFilter = gravita;
+            renderReport();
+        }
+
+        function filterByStatus(status) {
+            currentStatusFilter = status || '';
             renderReport();
         }
         
@@ -1436,16 +1501,26 @@
 
         function clearUteFilter() {
             currentUteFilter = [];
-            // Deseleziona tutti i checkbox
+            currentStatusFilter = '';
+            
+            // Deseleziona tutti i checkbox UTE
             const checkboxes = document.querySelectorAll('#uteDropdownContent input[type="checkbox"]');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false;
             });
-            // Chiudi il dropdown
+            
+            // Reset del dropdown stato
+            const statusDropdown = document.getElementById('statusFilter');
+            if (statusDropdown) {
+                statusDropdown.value = '';
+            }
+            
+            // Chiudi il dropdown UTE
             const dropdown = document.getElementById('uteDropdownContent');
             if (dropdown) {
                 dropdown.style.display = 'none';
             }
+            
             updateUteDropdownText();
             renderReport();
         }
@@ -1474,6 +1549,12 @@
                 });
             }
 
+            if (currentStatusFilter && currentStatusFilter !== '') {
+                filteredData = filteredData.filter(function(item) {
+                    return item.reworkStatus === currentStatusFilter;
+                });
+            }
+
             const uteSet = new Set();
             dataStorage.forEach(function(item) {
                 uteSet.add(item.ute);
@@ -1482,6 +1563,13 @@
 
             let html = '<div style="display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">';
             html += '<span style="font-weight: bold; margin-right: 10px;">FILTRI:</span>';
+            
+            // Dropdown per filtro stato
+            html += '<select id="statusFilter" onchange="filterByStatus(this.value)" style="padding: 8px 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 14px; font-weight: bold;">';
+            html += '<option value="">📊 TUTTI GLI STATI</option>';
+            html += '<option value="OK" ' + (currentStatusFilter === 'OK' ? 'selected' : '') + '>✅ SOLO OK</option>';
+            html += '<option value="KO" ' + (currentStatusFilter === 'KO' ? 'selected' : '') + '>❌ SOLO KO</option>';
+            html += '</select>';
             
             // Dropdown personalizzato per UTE
             html += '<div id="uteDropdownContainer" style="position: relative; display: inline-block;">';
@@ -1513,7 +1601,7 @@
             html += '<div style="margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">';
             html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">';
             html += '<div>';
-            html += '<strong>📈 Registrazioni: ' + filteredData.length + '</strong> ' + ((currentGravitaFilter > 0 || currentUteFilter.length > 0) ? '(filtrate)' : '') + '<br>';
+            html += '<strong>📈 Registrazioni: ' + filteredData.length + '</strong> ' + ((currentGravitaFilter > 0 || currentUteFilter.length > 0 || currentStatusFilter !== '') ? '(filtrate)' : '') + '<br>';
             html += '<strong>📅 Sessione: ' + today + '</strong>';
             html += '</div>';
             html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
@@ -1553,18 +1641,13 @@
                 const ute = sampleRecord ? sampleRecord.ute : 'Non assegnata';
                 
                 html += '<div class="chart-bar" id="bar-' + index + '">';
+                // DESCRIZIONE ANOMALIA
                 html += '<div class="chart-label">';
-                html += (index + 1) + '. ' + anomalia;
-                html += '<div style="display: inline-flex; gap: 8px; margin-left: 10px;">';
-                html += '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">' + ute + '</span>';
+                html += '<span class="anomalia-name">' + (index + 1) + '. ' + anomalia + ' - <span style="color: #e74c3c; font-weight: bold;">' + count + '</span></span>';
+                html += '<span class="anomalia-ute">' + ute + '</span>';
                 html += '</div>';
-                html += '</div>';
-                html += '<div class="chart-value">' + count + '</div>';
-                html += '<div class="chart-progress">';
-                html += '<div class="chart-fill" style="width: ' + width + '%"></div>';
-                html += '</div>';
-                html += '<div style="width: 60px; text-align: center; font-size: 12px; color: #666;">' + percent + '%</div>';
-                html += '<div style="display: flex; gap: 5px; margin-top: 8px;">';
+                // PULSANTI
+                html += '<div style="display: flex; gap: 8px; margin-top: 15px; justify-content: flex-end;">';
                 html += '<button class="expand-btn" onclick="toggleDetails(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + index + ')">👁️ Dettagli</button>';
                 html += '<button class="export-btn" onclick="exportAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', ' + count + ')">📤 Esporta</button>';
                 html += '</div>';
@@ -2325,6 +2408,8 @@
             html += '<button onclick="exportDatabase()" style="padding: 15px 25px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📤 ESPORTA DB</button>';
             html += '<input type="file" id="importFile" accept=".json" style="display: none;" onchange="importDatabase(event)">';
             html += '<button onclick="document.getElementById(\'importFile\').click()" style="padding: 15px 25px; background: #9b59b6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📥 IMPORTA DB</button>';
+            html += '<input type="file" id="integrateFile" accept=".json" style="display: none;" onchange="integrateDatabase(event)">';
+            html += '<button onclick="document.getElementById(\'integrateFile\').click()" style="padding: 15px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">🔄 INTEGRA DB</button>';
             html += '</div>';
             html += '</div>';
 
@@ -2563,6 +2648,60 @@
                     }
                 } catch (error) {
                     alert('❌ ERRORE IMPORTAZIONE:\n' + error.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function integrateDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.anomalieDB || !Array.isArray(importedData.anomalieDB)) {
+                        throw new Error('Formato file non valido');
+                    }
+
+                    // Prepara i dati importati (conversione maiuscolo)
+                    const importedAnomalie = importedData.anomalieDB.map(a => ({
+                        ...a,
+                        nome: a.nome ? a.nome.toUpperCase() : a.nome
+                    }));
+
+                    // Crea un Set per tracciare le anomalie esistenti (nome + ute)
+                    const existingKeys = new Set();
+                    anomalieDB.forEach(anomalia => {
+                        const key = `${anomalia.nome}|${anomalia.ute}`;
+                        existingKeys.add(key);
+                    });
+
+                    // Filtra le anomalie importate per evitare duplicati
+                    const newAnomalie = importedAnomalie.filter(anomalia => {
+                        const key = `${anomalia.nome}|${anomalia.ute}`;
+                        return !existingKeys.has(key);
+                    });
+
+                    if (newAnomalie.length === 0) {
+                        alert('ℹ️ NESSUNA NUOVA ANOMALIA DA INTEGRARE\n\nTutte le anomalie del file sono già presenti nel database.');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    if (confirm(`🔄 CONFERMI L'INTEGRAZIONE?\n\n📊 Anomalie attuali: ${anomalieDB.length}\n📥 Da integrare: ${newAnomalie.length}\n🔄 Totale finale: ${anomalieDB.length + newAnomalie.length}\n\n✅ Le anomalie duplicate verranno ignorate`)) {
+                        // Aggiungi solo le nuove anomalie
+                        anomalieDB = [...anomalieDB, ...newAnomalie];
+                        localStorage.setItem('anomalieDB', JSON.stringify(anomalieDB));
+                        populateAnomalieList();
+                        updateManageContent();
+                        alert(`✅ DATABASE INTEGRATO!\n📊 ${anomalieDB.length} anomalie totali\n🆕 ${newAnomalie.length} nuove anomalie aggiunte`);
+                    }
+                } catch (error) {
+                    alert('❌ ERRORE INTEGRAZIONE:\n' + error.message);
                 }
                 event.target.value = '';
             };
