@@ -2331,10 +2331,38 @@
                 return;
             }
 
+            // Applica gli stessi filtri della vista report
+            let reportData = dataStorage;
+
+            if (currentGravitaFilter > 0) {
+                reportData = reportData.filter(function (item) {
+                    return item.gravita === currentGravitaFilter;
+                });
+            }
+
+            if (currentUteFilter && currentUteFilter.length > 0) {
+                reportData = reportData.filter(function (item) {
+                    return currentUteFilter.includes(item.ute);
+                });
+            }
+
+            if (currentStatusFilter && currentStatusFilter !== '') {
+                reportData = reportData.filter(function (item) {
+                    return item.reworkStatus === currentStatusFilter;
+                });
+            }
+
+            if (reportData.length === 0) {
+                alert('⚠️ Nessun dato corrisponde ai filtri selezionati');
+                return;
+            }
+
+            const hasUteFilter = currentUteFilter && currentUteFilter.length > 0;
+
             const frequencies = {};
             const anomaliaDetails = {};
 
-            dataStorage.forEach(function (item) {
+            reportData.forEach(function (item) {
                 if (!frequencies[item.anomalia]) {
                     frequencies[item.anomalia] = 0;
                     anomaliaDetails[item.anomalia] = {
@@ -2347,7 +2375,7 @@
 
             const sorted = Object.entries(frequencies).sort(function (a, b) { return b[1] - a[1]; });
             const top5 = sorted.slice(0, 5);
-            const total = dataStorage.length;
+            const total = reportData.length;
             const now = new Date();
             const day = now.getDate().toString().padStart(2, '0');
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -2355,7 +2383,7 @@
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
 
-            const sortedData = dataStorage.slice().sort(function (a, b) {
+            const sortedData = reportData.slice().sort(function (a, b) {
                 // Prima separa KO da OK
                 const aIsKO = (a.reworkStatus === 'KO');
                 const bIsKO = (b.reworkStatus === 'KO');
@@ -2372,14 +2400,19 @@
                 return a.anomalia.localeCompare(b.anomalia);
             });
 
-            const uteStats = {};
-            dataStorage.forEach(function (item) {
-                const ute = item.ute || 'Non assegnata';
-                uteStats[ute] = (uteStats[ute] || 0) + 1;
-            });
+            let sortedUteStats = [];
+            let maxUteCount = 1;
 
-            const sortedUteStats = Object.entries(uteStats).sort(function (a, b) { return b[1] - a[1]; });
-            const maxUteCount = sortedUteStats[0] ? sortedUteStats[0][1] : 1;
+            if (!hasUteFilter) {
+                const uteStats = {};
+                reportData.forEach(function (item) {
+                    const ute = item.ute || 'Non assegnata';
+                    uteStats[ute] = (uteStats[ute] || 0) + 1;
+                });
+
+                sortedUteStats = Object.entries(uteStats).sort(function (a, b) { return b[1] - a[1]; });
+                maxUteCount = sortedUteStats[0] ? sortedUteStats[0][1] : 1;
+            }
             const maxTop5Count = top5[0] ? top5[0][1] : 1;
 
             function createTextBar(value, maxValue, maxBars, color) {
@@ -2392,6 +2425,21 @@
                     '</span><span style="color: #ddd; font-family: \'Courier New\', monospace; letter-spacing: 1px;">' +
                     emptyBar.repeat(emptyCount) + '</span>';
             }
+
+            // Descrizione filtri attivi per il testo del report
+            const filterDescriptions = [];
+            if (currentGravitaFilter > 0) {
+                filterDescriptions.push('Gravit\u00e0 = ' + currentGravitaFilter);
+            }
+            if (currentUteFilter && currentUteFilter.length > 0) {
+                filterDescriptions.push('UTE: ' + currentUteFilter.join(', '));
+            }
+            if (currentStatusFilter && currentStatusFilter !== '') {
+                filterDescriptions.push('Stato = ' + currentStatusFilter);
+            }
+            const filtersText = filterDescriptions.length > 0
+                ? 'Filtri attivi: ' + filterDescriptions.join(' | ')
+                : 'Nessun filtro attivo (report completo)';
 
             let emailHTML = '<!-- INIZIO REPORT - COPIA DA QUI -->\n';
             emailHTML += '<!DOCTYPE html><html><head>\n';
@@ -2435,6 +2483,7 @@
             emailHTML += '      <td style="padding: 30px; text-align: center;">\n';
             emailHTML += '        <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px 0; font-weight: bold;">📊 REPORT ANOMALIE</h1>\n';
             emailHTML += '        <p style="color: #e2e8f0; font-size: 16px; margin: 0;">Analisi Pareto - Sessione del ' + day + '/' + month + '/' + year + '</p>\n';
+            emailHTML += '        <p style="color: #cbd5f5; font-size: 13px; margin: 8px 0 0 0;">' + filtersText + '</p>\n';
             emailHTML += '      </td>\n';
             emailHTML += '    </tr>\n';
             emailHTML += '  </table>\n\n';
@@ -2514,40 +2563,42 @@
             emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
             emailHTML += '  </table>\n\n';
 
-            emailHTML += '  <!-- STATISTICHE PER UTE -->\n';
-            emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
-            emailHTML += '    <tr>\n';
-            emailHTML += '      <td>\n';
-            emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #2563eb; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
+            if (!hasUteFilter && sortedUteStats.length > 0) {
+                emailHTML += '  <!-- STATISTICHE PER UTE -->\n';
+                emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
+                emailHTML += '    <tr>\n';
+                emailHTML += '      <td>\n';
+                emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #2563eb; padding-left: 15px;">🏭 ANOMALIE PER UTE</h2>\n';
 
-            sortedUteStats.forEach(function (entry) {
-                const ute = entry[0];
-                const count = entry[1];
-                const percent = ((count / total) * 100).toFixed(1);
-                const textBar = createTextBar(count, maxUteCount, 25, '#2563eb');
+                sortedUteStats.forEach(function (entry) {
+                    const ute = entry[0];
+                    const count = entry[1];
+                    const percent = ((count / total) * 100).toFixed(1);
+                    const textBar = createTextBar(count, maxUteCount, 25, '#2563eb');
 
-                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="ute-table" style="margin-bottom: 12px;">\n';
-                emailHTML += '          <tr>\n';
-                emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;" class="bar-label">\n';
-                emailHTML += '              <span style="background-color: #2563eb; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
-                emailHTML += '              ' + textBar + '\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-                emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 18px;">' + count + '</span> ';
-                emailHTML += '              <span style="font-size: 10px; color: #64748b;">KO</span>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
-                emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 16px;">' + percent + '%</span>\n';
-                emailHTML += '            </td>\n';
-                emailHTML += '          </tr>\n';
-                emailHTML += '        </table>\n';
-            });
+                    emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="ute-table" style="margin-bottom: 12px;">\n';
+                    emailHTML += '          <tr>\n';
+                    emailHTML += '            <td width="120" style="padding: 8px; vertical-align: middle;" class="bar-label">\n';
+                    emailHTML += '              <span style="background-color: #2563eb; color: #ffffff; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 13px; display: inline-block; min-width: 80px; text-align: center;">' + ute + '</span>\n';
+                    emailHTML += '            </td>\n';
+                    emailHTML += '            <td style="padding: 8px; vertical-align: middle; font-size: 16px;" class="bar-progress">\n';
+                    emailHTML += '              ' + textBar + '\n';
+                    emailHTML += '            </td>\n';
+                    emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+                    emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 18px;">' + count + '</span> ';
+                    emailHTML += '              <span style="font-size: 10px; color: #64748b;">KO</span>\n';
+                    emailHTML += '            </td>\n';
+                    emailHTML += '                        <td width="80" style="padding: 8px; text-align: center; vertical-align: middle;" class="bar-value">\n';
+                    emailHTML += '              <span style="font-weight: bold; color: #1e293b; font-size: 16px;">' + percent + '%</span>\n';
+                    emailHTML += '            </td>\n';
+                    emailHTML += '          </tr>\n';
+                    emailHTML += '        </table>\n';
+                });
 
-            emailHTML += '      </td>\n';
-            emailHTML += '    </tr>\n';
-            emailHTML += '  </table>\n\n';
+                emailHTML += '      </td>\n';
+                emailHTML += '    </tr>\n';
+                emailHTML += '  </table>\n\n';
+            }
 
             emailHTML += '  <table width="100%" cellpadding="0" cellspacing="0" border="0">\n';
             emailHTML += '    <tr><td style="height: 3px; background-color: #cbd5e1;"></td></tr>\n';
