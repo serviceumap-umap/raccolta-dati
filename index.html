@@ -869,25 +869,59 @@
 
                 <div style="margin-bottom: 30px;">
                     <label
-                        style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block; text-align: center;">TELAIO:</label>
-                    <div
+                        style="font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block; text-align: center;">IDV (identificativo veicolo):</label>
+                    <div id="idvTypeSelector"
+                        style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <label
+                            style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 14px; border: 2px solid #3498db; border-radius: 8px; background: #eaf4fc;">
+                            <input type="radio" name="idvType" value="TEL" checked onchange="setIdvType('TEL')">
+                            <span style="font-size: 15px; font-weight: bold;">TEL</span>
+                        </label>
+                        <label
+                            style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 14px; border: 2px solid #8e44ad; border-radius: 8px; background: #f5eef8;">
+                            <input type="radio" name="idvType" value="SEQ" onchange="setIdvType('SEQ')">
+                            <span style="font-size: 15px; font-weight: bold;">SEQ</span>
+                        </label>
+                        <label
+                            style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 14px; border: 2px solid #e67e22; border-radius: 8px; background: #fef5e7;">
+                            <input type="radio" name="idvType" value="CIS" onchange="setIdvType('CIS')">
+                            <span style="font-size: 15px; font-weight: bold;">CIS</span>
+                        </label>
+                    </div>
+                    <div id="idvInputTel"
                         style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
                         <input type="text" id="telaioPrefixInput" placeholder="AA" maxlength="2"
                             onkeyup="saveTelaioPrefixAndUpdate()" onchange="saveTelaioPrefixAndUpdate()"
                             oninput="cleanPrefixInput()"
                             style="width: 80px; padding: 12px; font-size: 24px; font-weight: bold; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #000000; text-transform: uppercase; letter-spacing: 3px; min-height: 60px;"
-                            aria-label="Prefisso telaio (2 caratteri)" aria-describedby="prefixHelp">
+                            aria-label="Prefisso TEL (2 caratteri)" aria-describedby="prefixHelp">
                         <span style="font-size: 32px; font-weight: bold; color: #2c3e50;">-</span>
                         <input type="text" class="telaio-input" id="telaio" placeholder="00000" maxlength="5"
                             inputmode="numeric" pattern="[0-9]*"
                             style="width: 200px; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #3498db; border-radius: 8px; background: white; color: #000000; font-weight: bold; min-height: 60px; letter-spacing: 5px;"
-                            aria-label="Numero telaio (5 cifre)" aria-describedby="telaioHelp">
+                            aria-label="Numero TEL (5 cifre)" aria-describedby="telaioHelp">
                     </div>
-                    <div id="prefixHelp" class="sr-only">Inserisci 2 caratteri per il prefisso del telaio</div>
-                    <div id="telaioHelp" class="sr-only">Inserisci 5 cifre per il numero del telaio</div>
+                    <div id="idvInputSeq" style="display: none; justify-content: center; margin-bottom: 10px;">
+                        <input type="text" id="idvSeqInput" placeholder="00000" maxlength="5" inputmode="numeric"
+                            pattern="[0-9]*"
+                            style="width: 280px; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #8e44ad; border-radius: 8px; background: white; color: #000000; font-weight: bold; min-height: 60px; letter-spacing: 5px;"
+                            aria-label="Sequenza SEQ (5 cifre)" aria-describedby="idvSeqHelp">
+                    </div>
+                    <div id="idvInputCis" style="display: none; justify-content: center; margin-bottom: 10px;">
+                        <input type="text" id="idvCisInput" placeholder="0000000" maxlength="7" inputmode="numeric"
+                            pattern="[0-9]*"
+                            style="width: 320px; padding: 12px; font-size: 24px; text-align: center; border: 2px solid #e67e22; border-radius: 8px; background: white; color: #000000; font-weight: bold; min-height: 60px; letter-spacing: 4px;"
+                            aria-label="Codice CIS (7 cifre)" aria-describedby="idvCisHelp">
+                    </div>
+                    <div id="prefixHelp" class="sr-only">Inserisci 2 caratteri per il prefisso TEL</div>
+                    <div id="telaioHelp" class="sr-only">Inserisci 5 cifre per il numero TEL</div>
+                    <div id="idvSeqHelp" class="sr-only">Inserisci 5 cifre per la sequenza SEQ</div>
+                    <div id="idvCisHelp" class="sr-only">Inserisci 7 cifre per il codice identificativo scocca CIS</div>
+                    <div id="idvTypeHint" style="text-align: center; font-size: 13px; color: #6c757d; margin-top: 6px;">
+                        TEL: prefisso (2 lettere) + 5 cifre</div>
                 </div>
                 <div class="action-buttons">
-                    <button class="btn-clear" onclick="clearTelaio()" aria-label="Cancella numero telaio"
+                    <button class="btn-clear" onclick="clearIdvInput()" aria-label="Cancella IDV"
                         type="button">🗑️ CANCELLA</button>
                     <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled
                         aria-label="Invia dati anomalia" type="button">✅ INVIA</button>
@@ -935,7 +969,7 @@
     <div id="addTelaiModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>➕ Aggiungi telai</h2>
+                <h2>➕ Aggiungi IDV</h2>
                 <span class="close" onclick="closeModal('addTelaiModal')">&times;</span>
             </div>
             <div id="addTelaiContent"></div>
@@ -962,17 +996,275 @@
         let shouldClearOnNextInput = false;
         let currentReworkStatus = 'OK';
         let addTelaiBaseRecord = null;
+        const IDV_TYPES = ['TEL', 'SEQ', 'CIS'];
+        let currentIdvType = (function () {
+            const saved = (localStorage.getItem('idvType') || 'TEL').toUpperCase();
+            return IDV_TYPES.indexOf(saved) >= 0 ? saved : 'TEL';
+        })();
+        let lastIdvInput = { TEL: '', SEQ: '', CIS: '' };
+
+        function normalizeIdvType(type) {
+            type = (type || 'TEL').toUpperCase();
+            return IDV_TYPES.indexOf(type) >= 0 ? type : 'TEL';
+        }
+
+        function migrateRecordIdv(record) {
+            if (!record) return record;
+            if (record.idvType && record.telaio && /^(TEL|SEQ|CIS):/.test(record.telaio)) {
+                return record;
+            }
+            const legacy = (record.telaio || '').trim();
+            if (/^(TEL|SEQ|CIS):/.test(legacy)) {
+                const parts = legacy.split(':');
+                record.idvType = normalizeIdvType(parts[0]);
+                record.idvValue = parts.slice(1).join(':');
+                record.telaio = record.idvType + ':' + record.idvValue;
+            } else if (legacy) {
+                record.idvType = record.idvType ? normalizeIdvType(record.idvType) : 'TEL';
+                record.idvValue = legacy;
+                record.telaio = record.idvType + ':' + record.idvValue;
+            }
+            if (!record.idvNumerico && record.telaiioNumerico) {
+                record.idvNumerico = record.telaiioNumerico;
+            }
+            return record;
+        }
+
+        function migrateAllSessionData() {
+            let changed = false;
+            dataStorage = dataStorage.map(function (r) {
+                const before = r.telaio;
+                const migrated = migrateRecordIdv(r);
+                if (before !== migrated.telaio) changed = true;
+                return migrated;
+            });
+            if (changed) {
+                localStorage.setItem(storageKey, JSON.stringify(dataStorage));
+            }
+        }
+
+        function formatIdvDisplay(record) {
+            const r = migrateRecordIdv(Object.assign({}, record));
+            return r.telaio || '';
+        }
+
+        function getRecordIdvType(record) {
+            return normalizeIdvType(migrateRecordIdv(Object.assign({}, record)).idvType || 'TEL');
+        }
+
+        function getIdvDuplicateKey(record) {
+            return formatIdvDisplay(record).toLowerCase();
+        }
+
+        function syncLastIdvFromRecord(record) {
+            const r = migrateRecordIdv(Object.assign({}, record));
+            const type = getRecordIdvType(r);
+            const numerico = r.idvNumerico || r.telaiioNumerico || '';
+            if (numerico) {
+                lastIdvInput[type] = numerico;
+            } else if (type === 'TEL' && r.idvValue && r.idvValue.length >= 5) {
+                lastIdvInput.TEL = r.idvValue.slice(-5);
+            } else if (r.idvValue) {
+                lastIdvInput[type] = r.idvValue;
+            }
+            lastTelaio = lastIdvInput.TEL || '';
+        }
+
+        function setIdvType(type) {
+            currentIdvType = normalizeIdvType(type);
+            localStorage.setItem('idvType', currentIdvType);
+            const radios = document.getElementsByName('idvType');
+            for (let i = 0; i < radios.length; i++) {
+                radios[i].checked = (radios[i].value === currentIdvType);
+            }
+            const telBox = document.getElementById('idvInputTel');
+            const seqBox = document.getElementById('idvInputSeq');
+            const cisBox = document.getElementById('idvInputCis');
+            if (telBox) telBox.style.display = currentIdvType === 'TEL' ? 'flex' : 'none';
+            if (seqBox) seqBox.style.display = currentIdvType === 'SEQ' ? 'flex' : 'none';
+            if (cisBox) cisBox.style.display = currentIdvType === 'CIS' ? 'flex' : 'none';
+            const hint = document.getElementById('idvTypeHint');
+            if (hint) {
+                if (currentIdvType === 'TEL') hint.textContent = 'TEL: prefisso (2 lettere) + 5 cifre';
+                else if (currentIdvType === 'SEQ') hint.textContent = 'SEQ: 5 cifre numeriche';
+                else hint.textContent = 'CIS: 7 cifre numeriche (codice identificativo scocca)';
+            }
+            restoreLastIdvToForm();
+            updateSubmitButton();
+        }
+
+        function restoreLastIdvToForm() {
+            const last = lastIdvInput[currentIdvType] || '';
+            const tel = document.getElementById('telaio');
+            const seq = document.getElementById('idvSeqInput');
+            const cis = document.getElementById('idvCisInput');
+            if (currentIdvType === 'TEL' && tel && last) tel.value = last;
+            if (currentIdvType === 'SEQ' && seq && last) seq.value = last;
+            if (currentIdvType === 'CIS' && cis && last) cis.value = last;
+        }
+
+        function focusIdvInput() {
+            if (currentIdvType === 'TEL') {
+                const el = document.getElementById('telaio');
+                if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            } else if (currentIdvType === 'SEQ') {
+                const el = document.getElementById('idvSeqInput');
+                if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            } else {
+                const el = document.getElementById('idvCisInput');
+                if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            }
+        }
+
+        function isIdvFormReady() {
+            if (!selectedAnomalia) return false;
+            if (currentIdvType === 'TEL') {
+                return !!(telaioPrefixStorage && document.getElementById('telaio') && document.getElementById('telaio').value.length === 5);
+            }
+            if (currentIdvType === 'SEQ') {
+                const seq = document.getElementById('idvSeqInput');
+                return seq && seq.value.replace(/[^0-9]/g, '').length === 5;
+            }
+            if (currentIdvType === 'CIS') {
+                const cis = document.getElementById('idvCisInput');
+                return cis && cis.value.replace(/[^0-9]/g, '').length === 7;
+            }
+            return false;
+        }
+
+        function buildIdvFromForm() {
+            if (currentIdvType === 'TEL') {
+                const numero = (document.getElementById('telaio').value || '').replace(/[^0-9]/g, '');
+                if (!telaioPrefixStorage || numero.length !== 5) return null;
+                const value = telaioPrefixStorage + numero;
+                return {
+                    idvType: 'TEL',
+                    idvValue: value,
+                    telaio: 'TEL:' + value,
+                    idvNumerico: numero,
+                    telaiioNumerico: numero
+                };
+            }
+            if (currentIdvType === 'SEQ') {
+                const numero = (document.getElementById('idvSeqInput').value || '').replace(/[^0-9]/g, '');
+                if (numero.length !== 5) return null;
+                return {
+                    idvType: 'SEQ',
+                    idvValue: numero,
+                    telaio: 'SEQ:' + numero,
+                    idvNumerico: numero
+                };
+            }
+            if (currentIdvType === 'CIS') {
+                const numero = (document.getElementById('idvCisInput').value || '').replace(/[^0-9]/g, '');
+                if (numero.length !== 7) return null;
+                return {
+                    idvType: 'CIS',
+                    idvValue: numero,
+                    telaio: 'CIS:' + numero,
+                    idvNumerico: numero
+                };
+            }
+            return null;
+        }
+
+        function buildIdvFromAddModal(idvType) {
+            idvType = normalizeIdvType(idvType);
+            if (idvType === 'TEL') {
+                if (!telaioPrefixStorage) return null;
+                const input = document.getElementById('addTelaioInput');
+                if (!input) return null;
+                const numero = (input.value || '').replace(/[^0-9]/g, '');
+                if (numero.length !== 5) return null;
+                const value = telaioPrefixStorage + numero;
+                return {
+                    idvType: 'TEL',
+                    idvValue: value,
+                    telaio: 'TEL:' + value,
+                    idvNumerico: numero,
+                    telaiioNumerico: numero
+                };
+            }
+            if (idvType === 'SEQ') {
+                const input = document.getElementById('addIdvSeqInput');
+                if (!input) return null;
+                const numero = (input.value || '').replace(/[^0-9]/g, '');
+                if (numero.length !== 5) return null;
+                return { idvType: 'SEQ', idvValue: numero, telaio: 'SEQ:' + numero, idvNumerico: numero };
+            }
+            if (idvType === 'CIS') {
+                const input = document.getElementById('addIdvCisInput');
+                if (!input) return null;
+                const numero = (input.value || '').replace(/[^0-9]/g, '');
+                if (numero.length !== 7) return null;
+                return { idvType: 'CIS', idvValue: numero, telaio: 'CIS:' + numero, idvNumerico: numero };
+            }
+            return null;
+        }
+
+        function renderAddIdvModalFields(idvType) {
+            idvType = normalizeIdvType(idvType);
+            let html = '';
+            html += '<label style="font-size:16px; font-weight:bold; color:#2c3e50; margin-bottom:8px; display:block;">Nuovo IDV (' + idvType + '):</label>';
+            html += '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">';
+            if (idvType === 'TEL') {
+                html += '<span style="font-size:24px; font-weight:bold; color:#3498db; font-family:\'Courier New\', monospace;">' + (telaioPrefixStorage || '__') + '-</span>';
+                html += '<input type="text" id="addTelaioInput" maxlength="5" inputmode="numeric" pattern="[0-9]*" ';
+                html += 'style="width:160px; padding:10px; font-size:22px; text-align:center; border:2px solid #17a2b8; border-radius:8px; letter-spacing:4px; font-family:\'Courier New\', monospace; font-weight:bold;">';
+                html += '<div style="width:100%; margin-top:8px; font-size:12px; color:#6c757d;">Inserisci le 5 cifre finali TEL. Prefisso corrente applicato automaticamente.</div>';
+            } else if (idvType === 'SEQ') {
+                html += '<input type="text" id="addIdvSeqInput" maxlength="5" inputmode="numeric" pattern="[0-9]*" ';
+                html += 'style="width:200px; padding:10px; font-size:22px; text-align:center; border:2px solid #8e44ad; border-radius:8px; letter-spacing:4px; font-family:\'Courier New\', monospace; font-weight:bold;">';
+                html += '<div style="width:100%; margin-top:8px; font-size:12px; color:#6c757d;">Inserisci 5 cifre per la sequenza SEQ.</div>';
+            } else {
+                html += '<input type="text" id="addIdvCisInput" maxlength="7" inputmode="numeric" pattern="[0-9]*" ';
+                html += 'style="width:220px; padding:10px; font-size:22px; text-align:center; border:2px solid #e67e22; border-radius:8px; letter-spacing:3px; font-family:\'Courier New\', monospace; font-weight:bold;">';
+                html += '<div style="width:100%; margin-top:8px; font-size:12px; color:#6c757d;">Inserisci 7 cifre per il codice CIS.</div>';
+            }
+            html += '<button type="button" onclick="addTelaioForLastAnomalia()" ';
+            html += 'style="padding: 10px 18px; background:#27ae60; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; min-height:46px;">';
+            html += '✅ AGGIUNGI';
+            html += '</button>';
+            html += '</div>';
+            return html;
+        }
+
+        function setupAddIdvModalInput(idvType) {
+            idvType = normalizeIdvType(idvType);
+            if (idvType === 'TEL') {
+                const input = document.getElementById('addTelaioInput');
+                if (input) {
+                    input.addEventListener('input', function () {
+                        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+                    });
+                    input.focus();
+                }
+            } else if (idvType === 'SEQ') {
+                const input = document.getElementById('addIdvSeqInput');
+                if (input) {
+                    input.addEventListener('input', function () {
+                        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+                    });
+                    input.focus();
+                }
+            } else {
+                const input = document.getElementById('addIdvCisInput');
+                if (input) {
+                    input.addEventListener('input', function () {
+                        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 7);
+                    });
+                    input.focus();
+                }
+            }
+        }
+
 
         function setReworkStatus(status) {
             currentReworkStatus = (status === 'KO') ? 'KO' : 'OK';
 
-            // Se si seleziona KO o OK, porta il focus sul campo telaio
+            // Se si seleziona KO o OK, porta il focus sul campo IDV
             if (status === 'KO' || status === 'OK') {
-                const telaioInput = document.getElementById('telaio');
-                if (telaioInput) {
-                    telaioInput.focus();
-                    telaioInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                focusIdvInput();
             }
         }
 
@@ -1093,6 +1385,8 @@
         const today = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0');
         const storageKey = 'anomalieData_' + today;
         let dataStorage = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+        migrateAllSessionData();
 
         // ========== TRIGGER TASTIERA TOUCH ==========
         function triggerTouchKeyboard(element) {
@@ -1342,7 +1636,7 @@
             document.getElementById('selectedAnomalyName').textContent = anomaliaNome;
             document.getElementById('selectedAnomalyDisplay').style.display = 'block';
 
-            if (lastTelaio) document.getElementById('telaio').value = lastTelaio;
+            restoreLastIdvToForm();
             updateSubmitButton();
 
             // Collassa l'elenco risultati per evitare scroll e clic accidentali
@@ -1352,26 +1646,25 @@
                 isResultsCollapsed = true;
             }
 
-            // Porta il focus direttamente sul campo telaio e centralo a schermo
-            const telaioInput = document.getElementById('telaio');
-            if (telaioInput) {
-                telaioInput.focus();
-                telaioInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            focusIdvInput();
         }
 
         // ========== GESTIONE INPUT TELAIO ==========
-        function clearTelaio() {
-            document.getElementById('telaio').value = '';
+        function clearIdvInput() {
+            const tel = document.getElementById('telaio');
+            const seq = document.getElementById('idvSeqInput');
+            const cis = document.getElementById('idvCisInput');
+            if (tel) tel.value = '';
+            if (seq) seq.value = '';
+            if (cis) cis.value = '';
             shouldClearOnNextInput = false;
             updateSubmitButton();
-            // L'anomalia selezionata rimane visibile
         }
+        function clearTelaio() { clearIdvInput(); }
 
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitBtn');
-            const telaioValue = document.getElementById('telaio').value;
-            const isReady = selectedAnomalia && telaioValue.length === 5;
+            const isReady = isIdvFormReady();
 
             if (submitBtn) {
                 submitBtn.disabled = !isReady;
@@ -1382,24 +1675,32 @@
 
         // ========== SUBMIT DATI ==========
         function submitData() {
-            if (!selectedAnomalia || document.getElementById('telaio').value.length !== 5) {
-                showMessage('❌ Seleziona anomalia e inserisci telaio completo', 'error');
+            if (!selectedAnomalia || !isIdvFormReady()) {
+                showMessage('❌ Seleziona anomalia e inserisci IDV completo', 'error');
                 return;
             }
 
-            if (!telaioPrefixStorage) {
-                showMessage('❌ Inserisci il prefisso del telaio nel campo in alto', 'error');
+            const idvData = buildIdvFromForm();
+            if (!idvData) {
+                if (currentIdvType === 'TEL') {
+                    showMessage('❌ Inserisci il prefisso TEL e le 5 cifre', 'error');
+                } else if (currentIdvType === 'SEQ') {
+                    showMessage('❌ Inserisci le 5 cifre della sequenza SEQ', 'error');
+                } else {
+                    showMessage('❌ Inserisci le 7 cifre del codice CIS', 'error');
+                }
                 return;
             }
 
-            const numeroTelaio = document.getElementById('telaio').value;
-            // Assicura che il nome anomalia sia sempre MAIUSCOLO anche in registrazione giornata
             const data = {
                 anomalia: selectedAnomalia.nome.toUpperCase(),
                 ute: selectedAnomalia.ute,
                 gravita: selectedAnomalia.gravita,
-                telaio: getCompleteTelaio(),
-                telaiioNumerico: numeroTelaio,
+                idvType: idvData.idvType,
+                idvValue: idvData.idvValue,
+                telaio: idvData.telaio,
+                idvNumerico: idvData.idvNumerico,
+                telaiioNumerico: idvData.telaiioNumerico || idvData.idvNumerico,
                 turno: getTurnoCorrente(),
                 timestamp: new Date().toISOString(),
                 date: new Date().toLocaleDateString('it-IT'),
@@ -1407,24 +1708,23 @@
                 reworkStatus: currentReworkStatus
             };
 
-            // BLOCCO DUPLICATI: stesso telaio + stessa anomalia (case-insensitive)
             const isDuplicate = dataStorage.some(function (entry) {
-                return entry.telaio === data.telaio && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
+                return getIdvDuplicateKey(entry) === getIdvDuplicateKey(data) && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
             });
             if (isDuplicate) {
-                showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
+                showMessage('❌ KO: IDV e anomalia già registrati!', 'error');
                 return;
             }
 
-            lastTelaio = numeroTelaio;
+            lastIdvInput[idvData.idvType] = idvData.idvNumerico;
+            if (idvData.idvType === 'TEL') lastTelaio = idvData.idvNumerico;
             shouldClearOnNextInput = false;
             dataStorage.push(data);
             localStorage.setItem(storageKey, JSON.stringify(dataStorage));
 
             updateLastEntry(data);
 
-            // Mostra messaggio di successo
-            showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
+            showMessage('✅ Dato #' + dataStorage.length + ' salvato! IDV: ' + formatIdvDisplay(data), 'success');
 
             // Reset form dopo un breve delay per mostrare il messaggio
             setTimeout(function () {
@@ -1437,7 +1737,7 @@
             let html = '<div style="display: flex; justify-content: space-between; align-items: center;">';
             html += '<div>';
             html += '<strong>🔧 Anomalia:</strong> ' + data.anomalia + '<br>';
-            html += '<strong>🏷️ Telaio:</strong> <span style="font-family: \'Courier New\', monospace; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">' + data.telaio + '</span><br>';
+            html += '<strong>🏷️ IDV:</strong> <span style="font-family: \'Courier New\', monospace; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">' + formatIdvDisplay(data) + '</span><br>';
             html += '<strong>🕐 Orario:</strong> ' + data.time + '<br>';
             html += '<strong>🔁 Rilavorazione:</strong> ' + (getStatusIconHTML(data.reworkStatus, 16)) + ' <span style="font-weight:bold; color:#2c3e50;">' + (data.reworkStatus || 'OK') + '</span>';
             html += '</div>';
@@ -1446,7 +1746,7 @@
             html += '🗑️ RIMUOVI<br>ULTIMO';
             html += '</button>';
             html += '<button onclick="openAddTelaiModal()" style="background: #17a2b8; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; min-height: 50px;">';
-            html += '➕ AGGIUNGI<br>TELAI';
+            html += '➕ AGGIUNGI<br>IDV';
             html += '</button>';
             html += '</div>';
             html += '</div>';
@@ -1457,51 +1757,37 @@
 
         function openAddTelaiModal() {
             if (dataStorage.length === 0) {
-                showMessage('❌ Nessun dato disponibile per aggiungere telai', 'error');
+                showMessage('❌ Nessun dato disponibile per aggiungere IDV', 'error');
                 return;
             }
 
-            addTelaiBaseRecord = dataStorage[dataStorage.length - 1];
+            addTelaiBaseRecord = migrateRecordIdv(Object.assign({}, dataStorage[dataStorage.length - 1]));
+            renderAddIdvModal(addTelaiBaseRecord);
+        }
 
+        function renderAddIdvModal(baseRecord) {
             const container = document.getElementById('addTelaiContent');
             if (!container) return;
 
-            const anomaliaLabel = addTelaiBaseRecord.anomalia || (addTelaiBaseRecord.nome || '').toUpperCase();
-            const uteLabel = addTelaiBaseRecord.ute || 'N/D';
+            const anomaliaLabel = baseRecord.anomalia || (baseRecord.nome || '').toUpperCase();
+            const uteLabel = baseRecord.ute || 'N/D';
+            const idvType = getRecordIdvType(baseRecord);
 
             let html = '';
             html += '<div style="margin-bottom: 20px; padding: 15px; background: #e8f8ff; border-radius: 8px; border-left: 4px solid #17a2b8;">';
             html += '<div style="font-weight:bold; color:#0c5460; margin-bottom:5px;">Anomalia selezionata:</div>';
             html += '<div style="font-size:18px; font-weight:bold; color:#0c5460;">' + SecurityManager.escapeHtml(anomaliaLabel) + '</div>';
             html += '<div style="margin-top:5px; font-size:14px; color:#0c5460;">UTE: <span style="font-weight:bold;">' + SecurityManager.escapeHtml(uteLabel) + '</span></div>';
+            html += '<div style="margin-top:5px; font-size:14px; color:#0c5460;">Tipo IDV: <span style="font-weight:bold;">' + idvType + '</span></div>';
             html += '</div>';
-
             html += '<div style="margin-bottom: 20px;">';
-            html += '<label style="font-size:16px; font-weight:bold; color:#2c3e50; margin-bottom:8px; display:block;">Nuovo telaio:</label>';
-            html += '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">';
-            html += '<span style="font-size:24px; font-weight:bold; color:#3498db; font-family:\'Courier New\', monospace;">' + (telaioPrefixStorage || '__') + '-</span>';
-            html += '<input type="text" id="addTelaioInput" maxlength="5" inputmode="numeric" pattern="[0-9]*" ';
-            html += 'style="width:160px; padding:10px; font-size:22px; text-align:center; border:2px solid #17a2b8; border-radius:8px; letter-spacing:4px; font-family:\'Courier New\', monospace; font-weight:bold;">';
-            html += '<button type="button" onclick="addTelaioForLastAnomalia()" ';
-            html += 'style="padding: 10px 18px; background:#27ae60; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; min-height:46px;">';
-            html += '✅ AGGIUNGI';
-            html += '</button>';
+            html += renderAddIdvModalFields(idvType);
             html += '</div>';
-            html += '<div style="margin-top:8px; font-size:12px; color:#6c757d;">Inserisci solo le 5 cifre finali del telaio. Il prefisso corrente verrà applicato automaticamente.</div>';
-            html += '</div>';
-
             html += '<div id="addTelaiInfo" style="font-size:13px; color:#6c757d;"></div>';
 
             container.innerHTML = html;
             document.getElementById('addTelaiModal').style.display = 'block';
-
-            const input = document.getElementById('addTelaioInput');
-            if (input) {
-                input.addEventListener('input', function () {
-                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
-                });
-                input.focus();
-            }
+            setupAddIdvModalInput(idvType);
         }
 
         function addTelaioForLastAnomalia() {
@@ -1510,17 +1796,16 @@
                 return;
             }
 
-            if (!telaioPrefixStorage) {
-                showMessage('❌ Inserisci il prefisso del telaio nel campo in alto', 'error');
-                return;
-            }
-
-            const input = document.getElementById('addTelaioInput');
-            if (!input) return;
-
-            const numeroTelaio = (input.value || '').replace(/[^0-9]/g, '');
-            if (numeroTelaio.length !== 5) {
-                showMessage('❌ Inserisci le 5 cifre del telaio', 'error');
+            const idvType = getRecordIdvType(addTelaiBaseRecord);
+            const idvData = buildIdvFromAddModal(idvType);
+            if (!idvData) {
+                if (idvType === 'TEL') {
+                    showMessage('❌ Inserisci prefisso TEL e le 5 cifre', 'error');
+                } else if (idvType === 'SEQ') {
+                    showMessage('❌ Inserisci le 5 cifre SEQ', 'error');
+                } else {
+                    showMessage('❌ Inserisci le 7 cifre CIS', 'error');
+                }
                 return;
             }
 
@@ -1528,40 +1813,52 @@
                 anomalia: (addTelaiBaseRecord.anomalia || addTelaiBaseRecord.nome || '').toUpperCase(),
                 ute: addTelaiBaseRecord.ute,
                 gravita: addTelaiBaseRecord.gravita,
-                telaio: telaioPrefixStorage + numeroTelaio,
-                telaiioNumerico: numeroTelaio,
+                idvType: idvData.idvType,
+                idvValue: idvData.idvValue,
+                telaio: idvData.telaio,
+                idvNumerico: idvData.idvNumerico,
+                telaiioNumerico: idvData.telaiioNumerico || idvData.idvNumerico,
                 turno: getTurnoCorrente(),
                 timestamp: new Date().toISOString(),
                 date: new Date().toLocaleDateString('it-IT'),
                 time: new Date().toLocaleTimeString('it-IT'),
-                reworkStatus: currentReworkStatus
+                reworkStatus: addTelaiBaseRecord.reworkStatus || currentReworkStatus
             };
 
             const isDuplicate = dataStorage.some(function (entry) {
-                return entry.telaio === data.telaio && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
+                return getIdvDuplicateKey(entry) === getIdvDuplicateKey(data) && (entry.anomalia && entry.anomalia.toUpperCase() === data.anomalia);
             });
             if (isDuplicate) {
-                showMessage('❌ KO: Telaio e anomalia già registrati!', 'error');
+                showMessage('❌ KO: IDV e anomalia già registrati!', 'error');
                 return;
             }
 
-            lastTelaio = numeroTelaio;
+            lastIdvInput[idvData.idvType] = idvData.idvNumerico;
+            if (idvData.idvType === 'TEL') lastTelaio = idvData.idvNumerico;
             shouldClearOnNextInput = false;
             dataStorage.push(data);
             localStorage.setItem(storageKey, JSON.stringify(dataStorage));
 
             updateLastEntry(data);
-
-            showMessage('✅ Dato #' + dataStorage.length + ' salvato! Telaio: ' + data.telaio, 'success');
+            showMessage('✅ Dato #' + dataStorage.length + ' salvato! IDV: ' + formatIdvDisplay(data), 'success');
 
             const info = document.getElementById('addTelaiInfo');
             if (info) {
-                info.textContent = 'Ultimo telaio aggiunto: ' + data.telaio + ' alle ' + data.time;
+                info.textContent = 'Ultimo IDV aggiunto: ' + formatIdvDisplay(data) + ' alle ' + data.time;
             }
 
-            input.value = '';
-            input.focus();
+            if (idvType === 'TEL') {
+                const input = document.getElementById('addTelaioInput');
+                if (input) { input.value = ''; input.focus(); }
+            } else if (idvType === 'SEQ') {
+                const input = document.getElementById('addIdvSeqInput');
+                if (input) { input.value = ''; input.focus(); }
+            } else {
+                const input = document.getElementById('addIdvCisInput');
+                if (input) { input.value = ''; input.focus(); }
+            }
         }
+
 
         function openAddTelaiFromReport(anomaliaName, uteName) {
             if (!anomaliaName) {
@@ -1569,7 +1866,6 @@
                 return;
             }
 
-            // Trova un record di esempio per recuperare gravità e, se possibile, lo stato rework
             let sample = null;
             for (let i = 0; i < dataStorage.length; i++) {
                 const item = dataStorage[i];
@@ -1580,61 +1876,24 @@
             }
 
             if (!sample) {
-                // Nessun record in dataStorage con quell'anomalia: usa solo nome anomalia e UTE passata
                 sample = {
                     anomalia: anomaliaName,
                     ute: uteName || 'Non assegnata',
                     gravita: 2,
-                    reworkStatus: currentReworkStatus || 'OK'
+                    reworkStatus: currentReworkStatus || 'OK',
+                    idvType: currentIdvType
                 };
             }
 
-            addTelaiBaseRecord = {
+            addTelaiBaseRecord = migrateRecordIdv({
                 anomalia: (sample.anomalia || anomaliaName).toUpperCase(),
                 ute: sample.ute || uteName || 'Non assegnata',
                 gravita: sample.gravita || 2,
-                reworkStatus: sample.reworkStatus || currentReworkStatus || 'OK'
-            };
+                reworkStatus: sample.reworkStatus || currentReworkStatus || 'OK',
+                idvType: getRecordIdvType(sample)
+            });
 
-            const container = document.getElementById('addTelaiContent');
-            if (!container) return;
-
-            const anomaliaLabel = addTelaiBaseRecord.anomalia;
-            const uteLabel = addTelaiBaseRecord.ute || 'N/D';
-
-            let html = '';
-            html += '<div style="margin-bottom: 20px; padding: 15px; background: #e8f8ff; border-radius: 8px; border-left: 4px solid #17a2b8;">';
-            html += '<div style="font-weight:bold; color:#0c5460; margin-bottom:5px;">Anomalia selezionata:</div>';
-            html += '<div style="font-size:18px; font-weight:bold; color:#0c5460;">' + SecurityManager.escapeHtml(anomaliaLabel) + '</div>';
-            html += '<div style="margin-top:5px; font-size:14px; color:#0c5460;">UTE: <span style="font-weight:bold;">' + SecurityManager.escapeHtml(uteLabel) + '</span></div>';
-            html += '</div>';
-
-            html += '<div style="margin-bottom: 20px;">';
-            html += '<label style="font-size:16px; font-weight:bold; color:#2c3e50; margin-bottom:8px; display:block;">Nuovo telaio:</label>';
-            html += '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">';
-            html += '<span style="font-size:24px; font-weight:bold; color:#3498db; font-family:\'Courier New\', monospace;">' + (telaioPrefixStorage || '__') + '-</span>';
-            html += '<input type="text" id="addTelaioInput" maxlength="5" inputmode="numeric" pattern="[0-9]*" ';
-            html += 'style="width:160px; padding:10px; font-size:22px; text-align:center; border:2px solid #17a2b8; border-radius:8px; letter-spacing:4px; font-family:\'Courier New\', monospace; font-weight:bold;">';
-            html += '<button type="button" onclick="addTelaioForLastAnomalia()" ';
-            html += 'style="padding: 10px 18px; background:#27ae60; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; min-height:46px;">';
-            html += '✅ AGGIUNGI';
-            html += '</button>';
-            html += '</div>';
-            html += '<div style="margin-top:8px; font-size:12px; color:#6c757d;">Inserisci solo le 5 cifre finali del telaio. Il prefisso corrente verrà applicato automaticamente.</div>';
-            html += '</div>';
-
-            html += '<div id="addTelaiInfo" style="font-size:13px; color:#6c757d;"></div>';
-
-            container.innerHTML = html;
-            document.getElementById('addTelaiModal').style.display = 'block';
-
-            const input = document.getElementById('addTelaioInput');
-            if (input) {
-                input.addEventListener('input', function () {
-                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
-                });
-                input.focus();
-            }
+            renderAddIdvModal(addTelaiBaseRecord);
         }
 
         function removeLastEntry() {
@@ -1644,7 +1903,7 @@
             }
 
             const lastEntry = dataStorage[dataStorage.length - 1];
-            const confirmMessage = '❓ RIMUOVERE L\'ULTIMO INSERIMENTO?\n\n🔧 ' + lastEntry.anomalia + '\n🏷️ ' + lastEntry.telaio + '\n🕐 ' + lastEntry.time + '\n\n⚠️ Operazione NON reversibile!';
+            const confirmMessage = '❓ RIMUOVERE L\'ULTIMO INSERIMENTO?\n\n🔧 ' + lastEntry.anomalia + '\n🏷️ ' + formatIdvDisplay(lastEntry) + '\n🕐 ' + lastEntry.time + '\n\n⚠️ Operazione NON reversibile!';
 
             if (confirm(confirmMessage)) {
                 dataStorage.pop();
@@ -1653,10 +1912,11 @@
                 if (dataStorage.length > 0) {
                     const newLastEntry = dataStorage[dataStorage.length - 1];
                     updateLastEntry(newLastEntry);
-                    lastTelaio = newLastEntry.telaiioNumerico || newLastEntry.telaio.slice(-5);
+                    syncLastIdvFromRecord(newLastEntry);
                 } else {
                     document.getElementById('lastEntry').style.display = 'none';
                     lastTelaio = '';
+                    lastIdvInput = { TEL: '', SEQ: '', CIS: '' };
                 }
 
                 showMessage('✅ Ultimo inserimento rimosso! Totale: ' + dataStorage.length, 'success');
@@ -1984,7 +2244,7 @@
             if (detailsDiv.style.display === 'none') {
                 const telaiRelated = dataStorage.filter(function (item) { return item.anomalia === anomalia; });
 
-                let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Telai: (' + telaiRelated.length + ')</h4>';
+                let detailHtml = '<div class="detail-list"><h4 style="color: #2c3e50; margin-bottom: 15px;">🏷️ IDV: (' + telaiRelated.length + ')</h4>';
                 detailHtml += '<div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef;">';
 
                 telaiRelated.forEach(function (item, idx) {
@@ -1992,11 +2252,11 @@
 
                     detailHtml += '<div style="display: flex; align-items: center; padding: 6px 0; font-family: monospace; font-size: 14px;">';
                     detailHtml += '<span style="color: #495057; margin-right: 8px; min-width: 15px;">' + (idx + 1) + '.</span>';
-                    detailHtml += '<span style="font-weight: bold; color: #2c3e50; margin-right: 8px; min-width: 70px;">' + item.telaio + '</span>';
+                    detailHtml += '<span style="font-weight: bold; color: #2c3e50; margin-right: 8px; min-width: 70px;">' + formatIdvDisplay(item) + '</span>';
                     detailHtml += '<span style="margin-right: 8px;">-</span>';
                     detailHtml += '<span style="margin-right: 8px;">' + statusIcon + '</span>';
                     detailHtml += '<span style="margin-right: 8px;">-</span>';
-                    detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + item.telaio + '\', ' + index + ')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px;">🗑️</button>';
+                    detailHtml += '<button onclick="deleteTelaioFromAnomalia(\'' + anomalia.replace(/'/g, "\\'") + '\', \'' + formatIdvDisplay(item) + '\', ' + index + ')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px;">🗑️</button>';
                     detailHtml += '</div>';
                 });
 
@@ -2018,11 +2278,11 @@
             // Crea il formato testo per copiare
             let textFormat = `🔍 ANOMALIA: ${anomaliaName}\n`;
             textFormat += `📊 CASI TOTALI: ${totalCount}\n\n`;
-            textFormat += `📋 LISTA TELAI:\n`;
+            textFormat += `📋 LISTA IDV:\n`;
 
             telaiRelated.forEach(function (item, idx) {
                 const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
-                textFormat += `${idx + 1}. ${item.telaio} - ${statusIcon}\n`;
+                textFormat += `${idx + 1}. ${formatIdvDisplay(item)} - ${statusIcon}\n`;
             });
 
             // Crea la pagina HTML
@@ -2144,18 +2404,18 @@
             </div>
             <div class="stat-item">
                 <div class="stat-number">${telaiRelated.length}</div>
-                <div class="stat-label">Telai</div>
+                <div class="stat-label">IDV</div>
             </div>
         </div>
         
         <div class="telai-section">
-            <h2>📋 Lista Telai</h2>
+            <h2>📋 Lista IDV</h2>
             ${telaiRelated.map(function (item, idx) {
                 const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
                 return `
                 <div class="telaio-item">
                     <span class="telaio-number">${idx + 1}.</span>
-                    <span class="telaio-code">${item.telaio}</span>
+                    <span class="telaio-code">${formatIdvDisplay(item)}</span>
                     <span class="telaio-status">${statusIcon}</span>
                 </div>`;
             }).join('')}
@@ -2214,9 +2474,9 @@
                             <div style="font-size: 16px; font-weight: bold;">${anomaliaName}</div>
                         </div>
                         
-                        <!-- Telai List -->
+                        <!-- IDV List -->
                         <div style="padding: 20px;">
-                            <div style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; font-weight: bold;">Telai</div>
+                            <div style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px; font-weight: bold;">IDV</div>
                             ${telaiRelated.map(function (item, idx) {
                 const statusIcon = item.reworkStatus === 'OK' ? '✅' : '❌';
                 return `
@@ -2229,7 +2489,7 @@
                                     font-size: 14px;
                                 ">
                                     <span style="color: #6c757d; margin-right: 15px; min-width: 25px;">${idx + 1}.</span>
-                                    <span style="font-weight: bold; color: #2c3e50; margin-right: 15px; min-width: 80px;">${item.telaio}</span>
+                                    <span style="font-weight: bold; color: #2c3e50; margin-right: 15px; min-width: 80px;">${formatIdvDisplay(item)}</span>
                                     <span style="font-size: 16px;">${statusIcon}</span>
                                 </div>`;
             }).join('')}
@@ -2278,7 +2538,7 @@
         function deleteTelaioFromAnomalia(anomaliaName, telaioToDelete, reportIndex) {
             // Trova l'indice del record da eliminare
             const recordIndex = dataStorage.findIndex(function (item) {
-                return item.anomalia === anomaliaName && item.telaio === telaioToDelete;
+                return item.anomalia === anomaliaName && formatIdvDisplay(item) === telaioToDelete;
             });
 
             if (recordIndex === -1) {
@@ -2287,7 +2547,7 @@
             }
 
             const record = dataStorage[recordIndex];
-            const confirmMessage = '❓ CONFERMI L\'ELIMINAZIONE?\n\n🔧 Anomalia: ' + anomaliaName + '\n🏷️ Telaio: ' + telaioToDelete + '\n🕐 Data: ' + record.date + ' - ' + record.time + '\n\n⚠️ Operazione NON reversibile!';
+            const confirmMessage = '❓ CONFERMI L\'ELIMINAZIONE?\n\n🔧 Anomalia: ' + anomaliaName + '\n🏷️ IDV: ' + telaioToDelete + '\n🕐 Data: ' + record.date + ' - ' + record.time + '\n\n⚠️ Operazione NON reversibile!';
 
             if (confirm(confirmMessage)) {
                 // Rimuovi il record dal dataStorage
@@ -2308,13 +2568,14 @@
                 if (dataStorage.length > 0) {
                     const newLastEntry = dataStorage[dataStorage.length - 1];
                     updateLastEntry(newLastEntry);
-                    lastTelaio = newLastEntry.telaiioNumerico || newLastEntry.telaio.slice(-5);
+                    syncLastIdvFromRecord(newLastEntry);
                 } else {
                     document.getElementById('lastEntry').style.display = 'none';
                     lastTelaio = '';
+                    lastIdvInput = { TEL: '', SEQ: '', CIS: '' };
                 }
 
-                showMessage('✅ Telaio eliminato! Totale record: ' + dataStorage.length, 'success');
+                showMessage('✅ IDV eliminato! Totale record: ' + dataStorage.length, 'success');
             }
         }
 
@@ -2605,17 +2866,17 @@
             emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
             emailHTML += '  </table>\n\n';
 
-            emailHTML += '  <!-- ELENCO COMPLETO TELAI -->\n';
+            emailHTML += '  <!-- ELENCO COMPLETO IDV -->\n';
             emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
             emailHTML += '    <tr>\n';
             emailHTML += '      <td style="overflow-x: auto;">\n';
-            emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">📋 ELENCO COMPLETO TELAI</h2>\n';
+            emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">📋 ELENCO COMPLETO IDV</h2>\n';
             emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse; min-width: 100%;">\n';
             emailHTML += '          <thead>\n';
             emailHTML += '                        <tr style="background-color: #1e293b;">\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 40px;">#</th>\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 60px;">STATO</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 100px;">TELAIO</th>\n';
+            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 100px;">IDV</th>\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a;">ANOMALIA</th>\n';
             emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 120px;">UTE</th>\n';
             emailHTML += '            </tr>\n';
@@ -2627,7 +2888,7 @@
                 emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">' + (index + 1) + '</td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;">' + getStatusEmoji(item.reworkStatus) + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + item.telaio + '</span></td>\n';
+                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + formatIdvDisplay(item) + '</span></td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-wrap: break-word;">' + item.anomalia + '</td>\n';
                 emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;"><span style="background-color: #2563eb; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
                 emailHTML += '            </tr>\n';
@@ -3176,7 +3437,7 @@
 
             // Aggiungi tutti i record esistenti alla mappa
             currentData.forEach(record => {
-                const key = `${record.telaio}_${record.anomalia}`.toLowerCase();
+                const key = `${getIdvDuplicateKey(record)}_${record.anomalia}`.toLowerCase();
                 existingRecords.set(key, record);
             });
 
@@ -3184,11 +3445,12 @@
             const mergedData = [...currentData];
 
             importedData.forEach(importedRecord => {
-                const key = `${importedRecord.telaio}_${importedRecord.anomalia}`.toLowerCase();
+                const key = `${getIdvDuplicateKey(importedRecord)}_${importedRecord.anomalia}`.toLowerCase();
 
                 if (!existingRecords.has(key)) {
-                    mergedData.push(importedRecord);
-                    existingRecords.set(key, importedRecord);
+                    const migrated = migrateRecordIdv(importedRecord);
+                    mergedData.push(migrated);
+                    existingRecords.set(key, migrated);
                 }
             });
 
@@ -3292,15 +3554,43 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 if (event.target.id === 'telaioPrefixInput') saveTelaioPrefixAndUpdate();
-                if (event.target.id === 'telaio' && document.getElementById('telaio').value.length === 5 && selectedAnomalia) {
+                if (selectedAnomalia && isIdvFormReady() && (
+                    event.target.id === 'telaio' ||
+                    event.target.id === 'idvSeqInput' ||
+                    event.target.id === 'idvCisInput'
+                )) {
                     submitData();
-                    // Focus automatico sul campo ricerca dopo l'invio
                     setTimeout(function () {
                         document.getElementById('searchInput').focus();
                     }, 100);
                 }
             }
         });
+
+        function setupIdvNumericInput(inputEl, maxLen) {
+            if (!inputEl) return;
+            inputEl.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, maxLen);
+                updateSubmitButton();
+            });
+            inputEl.addEventListener('focus', function () {
+                const last = lastIdvInput[currentIdvType] || '';
+                if (last && this.value === '') {
+                    this.value = last;
+                    shouldClearOnNextInput = true;
+                    this.select();
+                }
+            });
+            inputEl.addEventListener('click', function () {
+                if (shouldClearOnNextInput) this.select();
+            });
+            inputEl.addEventListener('keydown', function (e) {
+                if (shouldClearOnNextInput && e.key >= '0' && e.key <= '9') {
+                    this.value = '';
+                    shouldClearOnNextInput = false;
+                }
+            });
+        }
 
         // ========== INIZIALIZZAZIONE ==========
         document.addEventListener('DOMContentLoaded', function () {
@@ -3318,53 +3608,17 @@
                 // Costruisci indice di ricerca per performance
                 buildSearchIndex();
 
+                setIdvType(currentIdvType);
+                setupIdvNumericInput(document.getElementById('telaio'), 5);
+                setupIdvNumericInput(document.getElementById('idvSeqInput'), 5);
+                setupIdvNumericInput(document.getElementById('idvCisInput'), 7);
+
                 document.getElementById('searchInput').focus();
-
-                // Setup telaio input per tastiera numerica nativa
-                const telaioInput = document.getElementById('telaio');
-                if (telaioInput) {
-                    telaioInput.addEventListener('input', function (e) {
-                        // Permetti solo numeri
-                        this.value = this.value.replace(/[^0-9]/g, '');
-
-                        // Limita a 5 cifre
-                        if (this.value.length > 5) {
-                            this.value = this.value.slice(0, 5);
-                        }
-
-                        updateSubmitButton();
-                    });
-
-                    telaioInput.addEventListener('focus', function () {
-                        // Se c'è l'ultimo telaio e il campo è vuoto, mostralo
-                        if (lastTelaio && this.value === '') {
-                            this.value = lastTelaio;
-                            shouldClearOnNextInput = true;
-                            // Seleziona tutto per facilitare la sostituzione
-                            this.select();
-                        }
-                    });
-
-                    telaioInput.addEventListener('click', function () {
-                        // Quando si clicca, se deve essere cancellato, seleziona tutto
-                        if (shouldClearOnNextInput) {
-                            this.select();
-                        }
-                    });
-
-                    telaioInput.addEventListener('keydown', function (e) {
-                        // Se deve essere cancellato e l'utente digita un numero, cancella
-                        if (shouldClearOnNextInput && e.key >= '0' && e.key <= '9') {
-                            this.value = '';
-                            shouldClearOnNextInput = false;
-                        }
-                    });
-                }
 
                 if (dataStorage.length > 0) {
                     const lastRecord = dataStorage[dataStorage.length - 1];
                     updateLastEntry(lastRecord);
-                    lastTelaio = lastRecord.telaiioNumerico || lastRecord.telaio.slice(-5);
+                    syncLastIdvFromRecord(lastRecord);
                     showMessage('📅 Sessione ripresa: ' + dataStorage.length + ' record salvati', 'success');
                 }
 
