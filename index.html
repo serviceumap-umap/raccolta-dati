@@ -2897,36 +2897,75 @@
             emailHTML += '    <tr><td style="height: 30px; background-color: #ffffff;"></td></tr>\n';
             emailHTML += '  </table>\n\n';
 
-            emailHTML += '  <!-- ELENCO COMPLETO IDV -->\n';
+            const anomalyGroups = {};
+            sortedData.forEach(function (item) {
+                if (!anomalyGroups[item.anomalia]) {
+                    anomalyGroups[item.anomalia] = [];
+                }
+                anomalyGroups[item.anomalia].push(item);
+            });
+
+            const orderedAnomalies = Object.entries(frequencies)
+                .sort(function (a, b) {
+                    const freqDiff = b[1] - a[1];
+                    if (freqDiff !== 0) return freqDiff;
+                    return a[0].localeCompare(b[0]);
+                })
+                .map(function (entry) { return entry[0]; });
+
+            emailHTML += '  <!-- ELENCO COMPLETO ID VEICOLI -->\n';
             emailHTML += '  <table width="100%" cellpadding="20" cellspacing="0" border="0" style="background-color: #ffffff;">\n';
             emailHTML += '    <tr>\n';
             emailHTML += '      <td style="overflow-x: auto;">\n';
-            emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">📋 ELENCO COMPLETO IDV</h2>\n';
-            emailHTML += '        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="border-collapse: collapse; min-width: 100%;">\n';
-            emailHTML += '          <thead>\n';
-            emailHTML += '                        <tr style="background-color: #1e293b;">\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 40px;">#</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 60px;">STATO</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 100px;">IDV</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a;">ANOMALIA</th>\n';
-            emailHTML += '              <th style="color: #ffffff; text-align: left; padding: 12px; font-size: 13px; border: 1px solid #0f172a; width: 120px;">UTE</th>\n';
-            emailHTML += '            </tr>\n';
-            emailHTML += '          </thead>\n';
-            emailHTML += '          <tbody>\n';
+            emailHTML += '        <h2 style="color: #1e293b; font-size: 22px; margin: 0 0 20px 0; border-left: 5px solid #dc2626; padding-left: 15px;">📋 ELENCO COMPLETO ID VEICOLI</h2>\n';
 
-            sortedData.forEach(function (item, index) {
-                const bgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
-                emailHTML += '            <tr style="background-color: ' + bgColor + ';">\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: bold;">' + (index + 1) + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;">' + getStatusEmoji(item.reworkStatus) + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-break: break-all;"><span style="font-family: Courier New, monospace; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-weight: bold;">' + formatIdvDisplay(item) + '</span></td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0; word-wrap: break-word;">' + item.anomalia + '</td>\n';
-                emailHTML += '              <td style="padding: 10px; border: 1px solid #e2e8f0;"><span style="background-color: #2563eb; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">' + (item.ute || 'Non assegnata') + '</span></td>\n';
-                emailHTML += '            </tr>\n';
+            orderedAnomalies.forEach(function (anomalia, groupIndex) {
+                const items = anomalyGroups[anomalia];
+                const count = items.length;
+                const percent = ((count / total) * 100).toFixed(1);
+                const details = anomaliaDetails[anomalia];
+                const ute = details ? details.ute : (items[0].ute || 'Non assegnata');
+                const sortedItems = items.slice().sort(function (a, b) {
+                    const aIsKO = (a.reworkStatus === 'KO');
+                    const bIsKO = (b.reworkStatus === 'KO');
+                    if (aIsKO && !bIsKO) return -1;
+                    if (!aIsKO && bIsKO) return 1;
+                    return formatIdvDisplay(a).localeCompare(formatIdvDisplay(b));
+                });
+
+                const rankLabel = (groupIndex + 1) + '\u00b0';
+                const casiWord = count === 1 ? 'caso' : 'casi';
+
+                emailHTML += '        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e2e8f0;">\n';
+                emailHTML += '          <tr>\n';
+                emailHTML += '            <td width="56" style="padding: 14px; text-align: center; vertical-align: top;">\n';
+                emailHTML += '              <span style="font-size: 22px; font-weight: bold; color: #dc2626;">' + rankLabel + '</span>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '            <td style="padding: 14px 14px 14px 0; vertical-align: top;">\n';
+                emailHTML += '              <p style="margin: 0 0 8px 0; font-size: 15px; line-height: 1.5;">\n';
+                emailHTML += '                <span style="font-weight: bold; color: #1e293b;">' + anomalia + '</span>\n';
+                emailHTML += '                <span style="color: #94a3b8; margin: 0 6px;">-</span>\n';
+                emailHTML += '                <span style="font-weight: bold; color: #dc2626; font-size: 17px;">' + count + ' ' + casiWord + '</span>\n';
+                emailHTML += '                <span style="color: #94a3b8; font-size: 12px; margin-left: 6px;">(' + percent + '%)</span>\n';
+                emailHTML += '              </p>\n';
+                emailHTML += '              <p style="margin: 0 0 12px 0; font-size: 12px;">\n';
+                emailHTML += '                <span style="background-color: #2563eb; color: #ffffff; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 11px;">' + ute + '</span>\n';
+                emailHTML += '              </p>\n';
+                emailHTML += '              <div style="line-height: 2.2;">\n';
+
+                sortedItems.forEach(function (item) {
+                    emailHTML += '                <span style="display: inline-block; margin: 3px 8px 3px 0; white-space: nowrap;">\n';
+                    emailHTML += '                  <span style="font-size: 14px;">' + getStatusEmoji(item.reworkStatus) + '</span>\n';
+                    emailHTML += '                  <span style="font-family: Courier New, monospace; background-color: #ffffff; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 13px; border: 1px solid #cbd5e1;">' + formatIdvDisplay(item) + '</span>\n';
+                    emailHTML += '                </span>\n';
+                });
+
+                emailHTML += '              </div>\n';
+                emailHTML += '            </td>\n';
+                emailHTML += '          </tr>\n';
+                emailHTML += '        </table>\n';
             });
 
-            emailHTML += '          </tbody>\n';
-            emailHTML += '        </table>\n';
             emailHTML += '      </td>\n';
             emailHTML += '    </tr>\n';
             emailHTML += '  </table>\n\n';
